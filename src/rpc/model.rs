@@ -365,13 +365,11 @@ impl IntoVal<Value> for Vec<(Value, Value)> {
   }
 }
 
-// #[cfg(all(test, feature = "use_tokio"))]
+#[cfg(test)]
 mod test {
   use super::*;
   use futures::{io::BufWriter, lock::Mutex};
   use std::{io::Cursor, sync::Arc};
-
-  // use tokio;
 
   #[tokio::test]
   async fn request_test() {
