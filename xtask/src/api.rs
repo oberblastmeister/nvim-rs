@@ -5,10 +5,11 @@ use std::{borrow::Cow, collections::HashMap};
 
 use getset::Getters;
 use lazy_static::lazy_static;
+use proc_macro2::Span;
 use quote::format_ident;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use syn::parse_quote;
+use syn::{parse_quote, GenericArgument, TypePath};
 
 lazy_static! {
   static ref UNBOUND_ARRAY_RE: Regex =
@@ -86,7 +87,7 @@ impl Type {
     &self.0
   }
 
-  pub fn to_rust_type(&self) -> Option<syn::Type> {
+  pub fn to_rust_type_ref(&self) -> Option<syn::Type> {
     Some(match &*self.0 {
       "Array" => parse_quote! { std::vec::Vec<Value> },
       "ArrayOf(Integer, 2)" => parse_quote! { (i64, i64) },
@@ -110,12 +111,60 @@ impl Type {
           .unwrap()
           .as_str();
         let inner_ty = Type(inner.into());
-        let inner_rust = inner_ty.to_rust_type().unwrap();
+        let inner_rust = inner_ty.to_rust_type_ref().unwrap();
+        // parse_quote! { &[#inner_rust] }
         parse_quote! { std::vec::Vec<#inner_rust> }
       }
       _ => return None,
     })
   }
+
+  pub fn to_rust_type_val(&self) -> Option<syn::Type> {
+    Some(match &*self.0 {
+      "String" => parse_quote! { String },
+      s if UNBOUND_ARRAY_RE.is_match(s) => {
+        let inner = UNBOUND_ARRAY_RE
+          .captures(s)
+          .expect("No captures")
+          .get(1)
+          .unwrap()
+          .as_str();
+        let inner_ty = Type(inner.into());
+        let inner_rust = inner_ty.to_rust_type_val().unwrap();
+        parse_quote! { std::vec::Vec<#inner_rust> }
+      }
+      _ => return self.to_rust_type_ref(),
+    })
+  }
+}
+
+pub fn give_lifetime(tipe: &mut syn::Type, lifetime_name: &str) -> bool {
+  let mut gave = false;
+
+  match tipe {
+    syn::Type::Reference(ref mut type_ref) if type_ref.lifetime.is_none() => {
+      let lifetime = syn::Lifetime::new(lifetime_name, Span::call_site());
+      type_ref.lifetime = Some(lifetime);
+      gave = true;
+    }
+    syn::Type::Path(TypePath { ref mut path, .. }) => {
+      let last_seg = path.segments.iter_mut().last().unwrap();
+      match last_seg.arguments {
+        syn::PathArguments::None => (),
+        syn::PathArguments::AngleBracketed(ref mut angle_bracketed) => {
+          for generic_arg in angle_bracketed.args.iter_mut() {
+            if let GenericArgument::Type(tipe) = generic_arg {
+              gave = give_lifetime(tipe, lifetime_name) || gave;
+            }
+          }
+        }
+        _ => (),
+      }
+    }
+    _ => (),
+  }
+
+  gave
 }
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Getters)]

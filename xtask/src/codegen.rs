@@ -1,28 +1,54 @@
-use crate::api::{Api, Function};
+use crate::api::{give_lifetime, Api, Function};
 use crate::utils;
 
-use std::process::Command;
+use std::{collections::HashSet, process::Command};
 use std::{io::Cursor, path::Path};
 
 use eyre::{eyre, Result};
-use proc_macro2::TokenStream;
+use proc_macro2::{Span, TokenStream};
 use quote::{format_ident, quote};
 use rmp_serde::decode;
 use xshell::{cmd, read_file, write_file};
 
 pub fn gen_from_api(api: Api) -> Result<String> {
+  let manually_implemented = [
+    "nvim_ui_attach",
+    "nvim_tabpage_list_wins",
+    "nvim_tabpage_get_win",
+    "nvim_win_get_buf",
+    "nvim_win_get_tabpage",
+    "nvim_list_bufs",
+    "nvim_get_current_buf",
+    "nvim_list_wins",
+    "nvim_get_current_win",
+    "nvim_create_buf",
+    "nvim_open_win",
+    "nvim_list_tabpages",
+    "nvim_get_current_tabpage",
+  ]
+  .iter()
+  .copied()
+  .collect::<HashSet<&'static str>>();
+
   let ext_type_impls = api
     .types()
     .keys()
     .map(|k| {
-      let api_funcs: Vec<_> = api.ext_type_functions(k).unwrap().collect();
+      let api_funcs: Vec<_> = api
+        .ext_type_functions(k)
+        .unwrap()
+        .filter(|f| !manually_implemented.contains(&**f.name()))
+        .collect();
       gen_impl(k, api_funcs)
     })
     .collect::<Vec<_>>();
 
   let tokens = quote! {
     use crate::{Value, Neovim, error::CallError, rpc::unpack::TryUnpack};
+    use crate::rpc::model::IntoVal;
     use futures::io::AsyncWrite;
+    use serde::Serialize;
+    use std::marker::PhantomData;
 
     #(#ext_type_impls)*
   };
@@ -33,7 +59,7 @@ pub fn gen_from_api(api: Api) -> Result<String> {
 pub fn gen_impl(ext_type_name: &str, functions: Vec<&Function>) -> TokenStream {
   let ext_type_ident = format_ident!("{}", ext_type_name);
 
-  let ext_type_methods = functions.iter().map(|f| gen_function(f));
+  let ext_type_methods = functions.iter().map(|f| gen_function(f, true));
 
   quote! {
     use crate::#ext_type_ident;
@@ -56,45 +82,64 @@ pub fn gen_impl(ext_type_name: &str, functions: Vec<&Function>) -> TokenStream {
   }
 }
 
-fn gen_function(f: &Function) -> TokenStream {
+fn gen_function(f: &Function, is_ext_type: bool) -> TokenStream {
   let name_str = f.name();
   let name = format_ident!("{}", name_str);
+
+  let skip_amount = if is_ext_type { 1 } else { 0 };
 
   let param_names: Vec<_> = f
     .parameters()
     .iter()
-    .skip(1)
+    .skip(skip_amount)
     .map(|param| format_ident!("{}", param.name()))
     .collect();
 
   let param_types = f
     .parameters()
     .iter()
-    .skip(1)
+    .skip(skip_amount)
     .filter_map(|param| {
       let tipe_str = param.tipe();
-      tipe_str.to_rust_type()
-      // tipe_str.to_rust_type().ok_or_else(|| {
-      //   eyre!("Failed to find rust type for type_str {}", tipe_str.inner())
-      // })
+      let tipe = tipe_str.to_rust_type_ref()?;
+      Some(tipe)
     })
     .collect::<Vec<_>>();
-  // .collect::<Result<Vec<_>>>()
-  // .unwrap();
+
+  let arg_param_types = f
+    .parameters()
+    .iter()
+    .skip(skip_amount)
+    .filter_map(|param| {
+      let tipe_str = param.tipe();
+      let mut tipe = tipe_str.to_rust_type_ref()?;
+      give_lifetime(&mut tipe, "'a");
+      Some(tipe)
+    })
+    .collect::<Vec<_>>();
 
   let return_type = f
     .return_type()
-    .to_rust_type()
+    .to_rust_type_val()
     .expect("Return type was not converted to rust type");
+
+  let args_struct = quote! {
+    #[derive(Debug, Serialize)]
+    // pub struct Args<'a, W: AsyncWrite + Send + Unpin + 'static>(PhantomData<fn(&'a ())>, Value, #(#arg_param_types),*);
+    pub struct Args<'a>(PhantomData<&'a ()>, Value, #(#arg_param_types),*);
+  };
 
   quote! {
     pub async fn #name(&self, #(#param_names: #param_types),*) -> Result<#return_type, Box<CallError>> {
+      #args_struct
+
       self.neovim.call(
         #name_str,
-        [
+        Args(
+          std::marker::PhantomData,
           self.code_data.clone(),
-          #(Value::from(#param_names)),*
-        ]
+          #(#param_names),*
+        )
       )
       .await??
       .try_unpack()

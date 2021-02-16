@@ -104,19 +104,17 @@ where
   }
 
   /// Will panic if args is serialized into something that is not an array
-  async fn send_msg<T: Serialize + fmt::Debug>(
+  async fn send_msg<T: Serialize>(
     &self,
     method: &str,
     args: T,
   ) -> Result<oneshot::Receiver<ResponseResult>, Box<EncodeError>> {
     let msgid = self.msgid_counter.fetch_add(1, Ordering::SeqCst);
 
-    fn get_args<T: Serialize + fmt::Debug>(
+    fn get_args<T: Serialize>(
       args: T,
     ) -> Result<Vec<Value>, Box<EncodeError>> {
-      debug!("Args value is {:?}", args);
       let args_value = to_value(args)?;
-      debug!("Args value is {:?}", args_value);
 
       Ok(match args_value {
         Value::Array(arr) => arr,
@@ -140,7 +138,7 @@ where
     Ok(receiver)
   }
 
-  pub async fn call<T: Serialize + fmt::Debug>(
+  pub async fn call<T: Serialize>(
     &self,
     method: &str,
     args: T,

@@ -1,262 +1,11 @@
 //! Generated file, do not edit by hand, see `xtask/src/codegen`
 
-use crate::Window;
+use crate::rpc::model::IntoVal;
+use crate::Tabpage;
 use crate::{error::CallError, rpc::unpack::TryUnpack, Neovim, Value};
 use futures::io::AsyncWrite;
-impl<W: AsyncWrite + Send + Unpin + 'static> Window<W> {
-  pub fn new(code_data: Value, neovim: Neovim<W>) -> Window<W> {
-    Window { code_data, neovim }
-  }
-  #[doc = r" Internal value, that represent type"]
-  pub fn get_value(&self) -> &Value {
-    &self.code_data
-  }
-  pub async fn nvim_win_get_buf(&self) -> Result<Window<W>, Box<CallError>> {
-    self
-      .neovim
-      .call("nvim_win_get_buf", [self.code_data.clone()])
-      .await??
-      .try_unpack()
-      .map_err(|v| Box::new(CallError::WrongValueType(v)))
-  }
-  pub async fn nvim_win_set_buf(
-    &self,
-    buffer: Window<W>,
-  ) -> Result<(), Box<CallError>> {
-    self
-      .neovim
-      .call(
-        "nvim_win_set_buf",
-        [self.code_data.clone(), Value::from(buffer)],
-      )
-      .await??
-      .try_unpack()
-      .map_err(|v| Box::new(CallError::WrongValueType(v)))
-  }
-  pub async fn nvim_win_get_cursor(
-    &self,
-  ) -> Result<(i64, i64), Box<CallError>> {
-    self
-      .neovim
-      .call("nvim_win_get_cursor", [self.code_data.clone()])
-      .await??
-      .try_unpack()
-      .map_err(|v| Box::new(CallError::WrongValueType(v)))
-  }
-  pub async fn nvim_win_set_cursor(
-    &self,
-    pos: (i64, i64),
-  ) -> Result<(), Box<CallError>> {
-    self
-      .neovim
-      .call(
-        "nvim_win_set_cursor",
-        [self.code_data.clone(), Value::from(pos)],
-      )
-      .await??
-      .try_unpack()
-      .map_err(|v| Box::new(CallError::WrongValueType(v)))
-  }
-  pub async fn nvim_win_get_height(&self) -> Result<i64, Box<CallError>> {
-    self
-      .neovim
-      .call("nvim_win_get_height", [self.code_data.clone()])
-      .await??
-      .try_unpack()
-      .map_err(|v| Box::new(CallError::WrongValueType(v)))
-  }
-  pub async fn nvim_win_set_height(
-    &self,
-    height: i64,
-  ) -> Result<(), Box<CallError>> {
-    self
-      .neovim
-      .call(
-        "nvim_win_set_height",
-        [self.code_data.clone(), Value::from(height)],
-      )
-      .await??
-      .try_unpack()
-      .map_err(|v| Box::new(CallError::WrongValueType(v)))
-  }
-  pub async fn nvim_win_get_width(&self) -> Result<i64, Box<CallError>> {
-    self
-      .neovim
-      .call("nvim_win_get_width", [self.code_data.clone()])
-      .await??
-      .try_unpack()
-      .map_err(|v| Box::new(CallError::WrongValueType(v)))
-  }
-  pub async fn nvim_win_set_width(
-    &self,
-    width: i64,
-  ) -> Result<(), Box<CallError>> {
-    self
-      .neovim
-      .call(
-        "nvim_win_set_width",
-        [self.code_data.clone(), Value::from(width)],
-      )
-      .await??
-      .try_unpack()
-      .map_err(|v| Box::new(CallError::WrongValueType(v)))
-  }
-  pub async fn nvim_win_get_var(
-    &self,
-    name: &str,
-  ) -> Result<Value, Box<CallError>> {
-    self
-      .neovim
-      .call(
-        "nvim_win_get_var",
-        [self.code_data.clone(), Value::from(name)],
-      )
-      .await??
-      .try_unpack()
-      .map_err(|v| Box::new(CallError::WrongValueType(v)))
-  }
-  pub async fn nvim_win_set_var(
-    &self,
-    name: &str,
-    value: Value,
-  ) -> Result<(), Box<CallError>> {
-    self
-      .neovim
-      .call(
-        "nvim_win_set_var",
-        [
-          self.code_data.clone(),
-          Value::from(name),
-          Value::from(value),
-        ],
-      )
-      .await??
-      .try_unpack()
-      .map_err(|v| Box::new(CallError::WrongValueType(v)))
-  }
-  pub async fn nvim_win_del_var(
-    &self,
-    name: &str,
-  ) -> Result<(), Box<CallError>> {
-    self
-      .neovim
-      .call(
-        "nvim_win_del_var",
-        [self.code_data.clone(), Value::from(name)],
-      )
-      .await??
-      .try_unpack()
-      .map_err(|v| Box::new(CallError::WrongValueType(v)))
-  }
-  pub async fn nvim_win_get_option(
-    &self,
-    name: &str,
-  ) -> Result<Value, Box<CallError>> {
-    self
-      .neovim
-      .call(
-        "nvim_win_get_option",
-        [self.code_data.clone(), Value::from(name)],
-      )
-      .await??
-      .try_unpack()
-      .map_err(|v| Box::new(CallError::WrongValueType(v)))
-  }
-  pub async fn nvim_win_set_option(
-    &self,
-    name: &str,
-    value: Value,
-  ) -> Result<(), Box<CallError>> {
-    self
-      .neovim
-      .call(
-        "nvim_win_set_option",
-        [
-          self.code_data.clone(),
-          Value::from(name),
-          Value::from(value),
-        ],
-      )
-      .await??
-      .try_unpack()
-      .map_err(|v| Box::new(CallError::WrongValueType(v)))
-  }
-  pub async fn nvim_win_get_position(
-    &self,
-  ) -> Result<(i64, i64), Box<CallError>> {
-    self
-      .neovim
-      .call("nvim_win_get_position", [self.code_data.clone()])
-      .await??
-      .try_unpack()
-      .map_err(|v| Box::new(CallError::WrongValueType(v)))
-  }
-  pub async fn nvim_win_get_tabpage(
-    &self,
-  ) -> Result<Tabpage<W>, Box<CallError>> {
-    self
-      .neovim
-      .call("nvim_win_get_tabpage", [self.code_data.clone()])
-      .await??
-      .try_unpack()
-      .map_err(|v| Box::new(CallError::WrongValueType(v)))
-  }
-  pub async fn nvim_win_get_number(&self) -> Result<i64, Box<CallError>> {
-    self
-      .neovim
-      .call("nvim_win_get_number", [self.code_data.clone()])
-      .await??
-      .try_unpack()
-      .map_err(|v| Box::new(CallError::WrongValueType(v)))
-  }
-  pub async fn nvim_win_is_valid(&self) -> Result<bool, Box<CallError>> {
-    self
-      .neovim
-      .call("nvim_win_is_valid", [self.code_data.clone()])
-      .await??
-      .try_unpack()
-      .map_err(|v| Box::new(CallError::WrongValueType(v)))
-  }
-  pub async fn nvim_win_set_config(
-    &self,
-    config: std::vec::Vec<(Value, Value)>,
-  ) -> Result<(), Box<CallError>> {
-    self
-      .neovim
-      .call(
-        "nvim_win_set_config",
-        [self.code_data.clone(), Value::from(config)],
-      )
-      .await??
-      .try_unpack()
-      .map_err(|v| Box::new(CallError::WrongValueType(v)))
-  }
-  pub async fn nvim_win_get_config(
-    &self,
-  ) -> Result<std::vec::Vec<(Value, Value)>, Box<CallError>> {
-    self
-      .neovim
-      .call("nvim_win_get_config", [self.code_data.clone()])
-      .await??
-      .try_unpack()
-      .map_err(|v| Box::new(CallError::WrongValueType(v)))
-  }
-  pub async fn nvim_win_close(
-    &self,
-    force: bool,
-  ) -> Result<(), Box<CallError>> {
-    self
-      .neovim
-      .call(
-        "nvim_win_close",
-        [self.code_data.clone(), Value::from(force)],
-      )
-      .await??
-      .try_unpack()
-      .map_err(|v| Box::new(CallError::WrongValueType(v)))
-  }
-}
-use crate::Tabpage;
+use serde::Serialize;
+use std::marker::PhantomData;
 impl<W: AsyncWrite + Send + Unpin + 'static> Tabpage<W> {
   pub fn new(code_data: Value, neovim: Neovim<W>) -> Tabpage<W> {
     Tabpage { code_data, neovim }
@@ -265,25 +14,17 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Tabpage<W> {
   pub fn get_value(&self) -> &Value {
     &self.code_data
   }
-  pub async fn nvim_tabpage_list_wins(
-    &self,
-  ) -> Result<std::vec::Vec<Window<W>>, Box<CallError>> {
-    self
-      .neovim
-      .call("nvim_tabpage_list_wins", [self.code_data.clone()])
-      .await??
-      .try_unpack()
-      .map_err(|v| Box::new(CallError::WrongValueType(v)))
-  }
   pub async fn nvim_tabpage_get_var(
     &self,
     name: &str,
   ) -> Result<Value, Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(PhantomData<&'a ()>, Value, &'a str);
     self
       .neovim
       .call(
         "nvim_tabpage_get_var",
-        [self.code_data.clone(), Value::from(name)],
+        Args(std::marker::PhantomData, self.code_data.clone(), name),
       )
       .await??
       .try_unpack()
@@ -294,15 +35,18 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Tabpage<W> {
     name: &str,
     value: Value,
   ) -> Result<(), Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(PhantomData<&'a ()>, Value, &'a str, Value);
     self
       .neovim
       .call(
         "nvim_tabpage_set_var",
-        [
+        Args(
+          std::marker::PhantomData,
           self.code_data.clone(),
-          Value::from(name),
-          Value::from(value),
-        ],
+          name,
+          value,
+        ),
       )
       .await??
       .try_unpack()
@@ -312,38 +56,40 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Tabpage<W> {
     &self,
     name: &str,
   ) -> Result<(), Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(PhantomData<&'a ()>, Value, &'a str);
     self
       .neovim
       .call(
         "nvim_tabpage_del_var",
-        [self.code_data.clone(), Value::from(name)],
+        Args(std::marker::PhantomData, self.code_data.clone(), name),
       )
       .await??
       .try_unpack()
       .map_err(|v| Box::new(CallError::WrongValueType(v)))
   }
-  pub async fn nvim_tabpage_get_win(
-    &self,
-  ) -> Result<Window<W>, Box<CallError>> {
-    self
-      .neovim
-      .call("nvim_tabpage_get_win", [self.code_data.clone()])
-      .await??
-      .try_unpack()
-      .map_err(|v| Box::new(CallError::WrongValueType(v)))
-  }
   pub async fn nvim_tabpage_get_number(&self) -> Result<i64, Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(PhantomData<&'a ()>, Value);
     self
       .neovim
-      .call("nvim_tabpage_get_number", [self.code_data.clone()])
+      .call(
+        "nvim_tabpage_get_number",
+        Args(std::marker::PhantomData, self.code_data.clone()),
+      )
       .await??
       .try_unpack()
       .map_err(|v| Box::new(CallError::WrongValueType(v)))
   }
   pub async fn nvim_tabpage_is_valid(&self) -> Result<bool, Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(PhantomData<&'a ()>, Value);
     self
       .neovim
-      .call("nvim_tabpage_is_valid", [self.code_data.clone()])
+      .call(
+        "nvim_tabpage_is_valid",
+        Args(std::marker::PhantomData, self.code_data.clone()),
+      )
       .await??
       .try_unpack()
       .map_err(|v| Box::new(CallError::WrongValueType(v)))
@@ -359,9 +105,14 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Buffer<W> {
     &self.code_data
   }
   pub async fn nvim_buf_line_count(&self) -> Result<i64, Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(PhantomData<&'a ()>, Value);
     self
       .neovim
-      .call("nvim_buf_line_count", [self.code_data.clone()])
+      .call(
+        "nvim_buf_line_count",
+        Args(std::marker::PhantomData, self.code_data.clone()),
+      )
       .await??
       .try_unpack()
       .map_err(|v| Box::new(CallError::WrongValueType(v)))
@@ -371,24 +122,37 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Buffer<W> {
     send_buffer: bool,
     opts: std::vec::Vec<(Value, Value)>,
   ) -> Result<bool, Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(
+      PhantomData<&'a ()>,
+      Value,
+      bool,
+      std::vec::Vec<(Value, Value)>,
+    );
     self
       .neovim
       .call(
         "nvim_buf_attach",
-        [
+        Args(
+          std::marker::PhantomData,
           self.code_data.clone(),
-          Value::from(send_buffer),
-          Value::from(opts),
-        ],
+          send_buffer,
+          opts,
+        ),
       )
       .await??
       .try_unpack()
       .map_err(|v| Box::new(CallError::WrongValueType(v)))
   }
   pub async fn nvim_buf_detach(&self) -> Result<bool, Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(PhantomData<&'a ()>, Value);
     self
       .neovim
-      .call("nvim_buf_detach", [self.code_data.clone()])
+      .call(
+        "nvim_buf_detach",
+        Args(std::marker::PhantomData, self.code_data.clone()),
+      )
       .await??
       .try_unpack()
       .map_err(|v| Box::new(CallError::WrongValueType(v)))
@@ -398,17 +162,20 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Buffer<W> {
     start: i64,
     end: i64,
     strict_indexing: bool,
-  ) -> Result<std::vec::Vec<&str>, Box<CallError>> {
+  ) -> Result<std::vec::Vec<String>, Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(PhantomData<&'a ()>, Value, i64, i64, bool);
     self
       .neovim
       .call(
         "nvim_buf_get_lines",
-        [
+        Args(
+          std::marker::PhantomData,
           self.code_data.clone(),
-          Value::from(start),
-          Value::from(end),
-          Value::from(strict_indexing),
-        ],
+          start,
+          end,
+          strict_indexing,
+        ),
       )
       .await??
       .try_unpack()
@@ -421,17 +188,27 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Buffer<W> {
     strict_indexing: bool,
     replacement: std::vec::Vec<&str>,
   ) -> Result<(), Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(
+      PhantomData<&'a ()>,
+      Value,
+      i64,
+      i64,
+      bool,
+      std::vec::Vec<&'a str>,
+    );
     self
       .neovim
       .call(
         "nvim_buf_set_lines",
-        [
+        Args(
+          std::marker::PhantomData,
           self.code_data.clone(),
-          Value::from(start),
-          Value::from(end),
-          Value::from(strict_indexing),
-          Value::from(replacement),
-        ],
+          start,
+          end,
+          strict_indexing,
+          replacement,
+        ),
       )
       .await??
       .try_unpack()
@@ -445,18 +222,29 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Buffer<W> {
     end_col: i64,
     replacement: std::vec::Vec<&str>,
   ) -> Result<(), Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(
+      PhantomData<&'a ()>,
+      Value,
+      i64,
+      i64,
+      i64,
+      i64,
+      std::vec::Vec<&'a str>,
+    );
     self
       .neovim
       .call(
         "nvim_buf_set_text",
-        [
+        Args(
+          std::marker::PhantomData,
           self.code_data.clone(),
-          Value::from(start_row),
-          Value::from(start_col),
-          Value::from(end_row),
-          Value::from(end_col),
-          Value::from(replacement),
-        ],
+          start_row,
+          start_col,
+          end_row,
+          end_col,
+          replacement,
+        ),
       )
       .await??
       .try_unpack()
@@ -466,11 +254,13 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Buffer<W> {
     &self,
     index: i64,
   ) -> Result<i64, Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(PhantomData<&'a ()>, Value, i64);
     self
       .neovim
       .call(
         "nvim_buf_get_offset",
-        [self.code_data.clone(), Value::from(index)],
+        Args(std::marker::PhantomData, self.code_data.clone(), index),
       )
       .await??
       .try_unpack()
@@ -480,20 +270,27 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Buffer<W> {
     &self,
     name: &str,
   ) -> Result<Value, Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(PhantomData<&'a ()>, Value, &'a str);
     self
       .neovim
       .call(
         "nvim_buf_get_var",
-        [self.code_data.clone(), Value::from(name)],
+        Args(std::marker::PhantomData, self.code_data.clone(), name),
       )
       .await??
       .try_unpack()
       .map_err(|v| Box::new(CallError::WrongValueType(v)))
   }
   pub async fn nvim_buf_get_changedtick(&self) -> Result<i64, Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(PhantomData<&'a ()>, Value);
     self
       .neovim
-      .call("nvim_buf_get_changedtick", [self.code_data.clone()])
+      .call(
+        "nvim_buf_get_changedtick",
+        Args(std::marker::PhantomData, self.code_data.clone()),
+      )
       .await??
       .try_unpack()
       .map_err(|v| Box::new(CallError::WrongValueType(v)))
@@ -502,11 +299,13 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Buffer<W> {
     &self,
     mode: &str,
   ) -> Result<std::vec::Vec<std::vec::Vec<(Value, Value)>>, Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(PhantomData<&'a ()>, Value, &'a str);
     self
       .neovim
       .call(
         "nvim_buf_get_keymap",
-        [self.code_data.clone(), Value::from(mode)],
+        Args(std::marker::PhantomData, self.code_data.clone(), mode),
       )
       .await??
       .try_unpack()
@@ -519,17 +318,27 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Buffer<W> {
     rhs: &str,
     opts: std::vec::Vec<(Value, Value)>,
   ) -> Result<(), Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(
+      PhantomData<&'a ()>,
+      Value,
+      &'a str,
+      &'a str,
+      &'a str,
+      std::vec::Vec<(Value, Value)>,
+    );
     self
       .neovim
       .call(
         "nvim_buf_set_keymap",
-        [
+        Args(
+          std::marker::PhantomData,
           self.code_data.clone(),
-          Value::from(mode),
-          Value::from(lhs),
-          Value::from(rhs),
-          Value::from(opts),
-        ],
+          mode,
+          lhs,
+          rhs,
+          opts,
+        ),
       )
       .await??
       .try_unpack()
@@ -540,11 +349,13 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Buffer<W> {
     mode: &str,
     lhs: &str,
   ) -> Result<(), Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(PhantomData<&'a ()>, Value, &'a str, &'a str);
     self
       .neovim
       .call(
         "nvim_buf_del_keymap",
-        [self.code_data.clone(), Value::from(mode), Value::from(lhs)],
+        Args(std::marker::PhantomData, self.code_data.clone(), mode, lhs),
       )
       .await??
       .try_unpack()
@@ -554,11 +365,17 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Buffer<W> {
     &self,
     opts: std::vec::Vec<(Value, Value)>,
   ) -> Result<std::vec::Vec<(Value, Value)>, Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(
+      PhantomData<&'a ()>,
+      Value,
+      std::vec::Vec<(Value, Value)>,
+    );
     self
       .neovim
       .call(
         "nvim_buf_get_commands",
-        [self.code_data.clone(), Value::from(opts)],
+        Args(std::marker::PhantomData, self.code_data.clone(), opts),
       )
       .await??
       .try_unpack()
@@ -569,15 +386,18 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Buffer<W> {
     name: &str,
     value: Value,
   ) -> Result<(), Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(PhantomData<&'a ()>, Value, &'a str, Value);
     self
       .neovim
       .call(
         "nvim_buf_set_var",
-        [
+        Args(
+          std::marker::PhantomData,
           self.code_data.clone(),
-          Value::from(name),
-          Value::from(value),
-        ],
+          name,
+          value,
+        ),
       )
       .await??
       .try_unpack()
@@ -587,11 +407,13 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Buffer<W> {
     &self,
     name: &str,
   ) -> Result<(), Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(PhantomData<&'a ()>, Value, &'a str);
     self
       .neovim
       .call(
         "nvim_buf_del_var",
-        [self.code_data.clone(), Value::from(name)],
+        Args(std::marker::PhantomData, self.code_data.clone(), name),
       )
       .await??
       .try_unpack()
@@ -601,11 +423,13 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Buffer<W> {
     &self,
     name: &str,
   ) -> Result<Value, Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(PhantomData<&'a ()>, Value, &'a str);
     self
       .neovim
       .call(
         "nvim_buf_get_option",
-        [self.code_data.clone(), Value::from(name)],
+        Args(std::marker::PhantomData, self.code_data.clone(), name),
       )
       .await??
       .try_unpack()
@@ -616,24 +440,32 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Buffer<W> {
     name: &str,
     value: Value,
   ) -> Result<(), Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(PhantomData<&'a ()>, Value, &'a str, Value);
     self
       .neovim
       .call(
         "nvim_buf_set_option",
-        [
+        Args(
+          std::marker::PhantomData,
           self.code_data.clone(),
-          Value::from(name),
-          Value::from(value),
-        ],
+          name,
+          value,
+        ),
       )
       .await??
       .try_unpack()
       .map_err(|v| Box::new(CallError::WrongValueType(v)))
   }
-  pub async fn nvim_buf_get_name(&self) -> Result<&str, Box<CallError>> {
+  pub async fn nvim_buf_get_name(&self) -> Result<String, Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(PhantomData<&'a ()>, Value);
     self
       .neovim
-      .call("nvim_buf_get_name", [self.code_data.clone()])
+      .call(
+        "nvim_buf_get_name",
+        Args(std::marker::PhantomData, self.code_data.clone()),
+      )
       .await??
       .try_unpack()
       .map_err(|v| Box::new(CallError::WrongValueType(v)))
@@ -642,20 +474,27 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Buffer<W> {
     &self,
     name: &str,
   ) -> Result<(), Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(PhantomData<&'a ()>, Value, &'a str);
     self
       .neovim
       .call(
         "nvim_buf_set_name",
-        [self.code_data.clone(), Value::from(name)],
+        Args(std::marker::PhantomData, self.code_data.clone(), name),
       )
       .await??
       .try_unpack()
       .map_err(|v| Box::new(CallError::WrongValueType(v)))
   }
   pub async fn nvim_buf_is_loaded(&self) -> Result<bool, Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(PhantomData<&'a ()>, Value);
     self
       .neovim
-      .call("nvim_buf_is_loaded", [self.code_data.clone()])
+      .call(
+        "nvim_buf_is_loaded",
+        Args(std::marker::PhantomData, self.code_data.clone()),
+      )
       .await??
       .try_unpack()
       .map_err(|v| Box::new(CallError::WrongValueType(v)))
@@ -664,20 +503,31 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Buffer<W> {
     &self,
     opts: std::vec::Vec<(Value, Value)>,
   ) -> Result<(), Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(
+      PhantomData<&'a ()>,
+      Value,
+      std::vec::Vec<(Value, Value)>,
+    );
     self
       .neovim
       .call(
         "nvim_buf_delete",
-        [self.code_data.clone(), Value::from(opts)],
+        Args(std::marker::PhantomData, self.code_data.clone(), opts),
       )
       .await??
       .try_unpack()
       .map_err(|v| Box::new(CallError::WrongValueType(v)))
   }
   pub async fn nvim_buf_is_valid(&self) -> Result<bool, Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(PhantomData<&'a ()>, Value);
     self
       .neovim
-      .call("nvim_buf_is_valid", [self.code_data.clone()])
+      .call(
+        "nvim_buf_is_valid",
+        Args(std::marker::PhantomData, self.code_data.clone()),
+      )
       .await??
       .try_unpack()
       .map_err(|v| Box::new(CallError::WrongValueType(v)))
@@ -686,11 +536,13 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Buffer<W> {
     &self,
     name: &str,
   ) -> Result<(i64, i64), Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(PhantomData<&'a ()>, Value, &'a str);
     self
       .neovim
       .call(
         "nvim_buf_get_mark",
-        [self.code_data.clone(), Value::from(name)],
+        Args(std::marker::PhantomData, self.code_data.clone(), name),
       )
       .await??
       .try_unpack()
@@ -702,16 +554,25 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Buffer<W> {
     id: i64,
     opts: std::vec::Vec<(Value, Value)>,
   ) -> Result<std::vec::Vec<i64>, Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(
+      PhantomData<&'a ()>,
+      Value,
+      i64,
+      i64,
+      std::vec::Vec<(Value, Value)>,
+    );
     self
       .neovim
       .call(
         "nvim_buf_get_extmark_by_id",
-        [
+        Args(
+          std::marker::PhantomData,
           self.code_data.clone(),
-          Value::from(ns_id),
-          Value::from(id),
-          Value::from(opts),
-        ],
+          ns_id,
+          id,
+          opts,
+        ),
       )
       .await??
       .try_unpack()
@@ -724,17 +585,27 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Buffer<W> {
     end: Value,
     opts: std::vec::Vec<(Value, Value)>,
   ) -> Result<std::vec::Vec<Value>, Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(
+      PhantomData<&'a ()>,
+      Value,
+      i64,
+      Value,
+      Value,
+      std::vec::Vec<(Value, Value)>,
+    );
     self
       .neovim
       .call(
         "nvim_buf_get_extmarks",
-        [
+        Args(
+          std::marker::PhantomData,
           self.code_data.clone(),
-          Value::from(ns_id),
-          Value::from(start),
-          Value::from(end),
-          Value::from(opts),
-        ],
+          ns_id,
+          start,
+          end,
+          opts,
+        ),
       )
       .await??
       .try_unpack()
@@ -747,17 +618,27 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Buffer<W> {
     col: i64,
     opts: std::vec::Vec<(Value, Value)>,
   ) -> Result<i64, Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(
+      PhantomData<&'a ()>,
+      Value,
+      i64,
+      i64,
+      i64,
+      std::vec::Vec<(Value, Value)>,
+    );
     self
       .neovim
       .call(
         "nvim_buf_set_extmark",
-        [
+        Args(
+          std::marker::PhantomData,
           self.code_data.clone(),
-          Value::from(ns_id),
-          Value::from(line),
-          Value::from(col),
-          Value::from(opts),
-        ],
+          ns_id,
+          line,
+          col,
+          opts,
+        ),
       )
       .await??
       .try_unpack()
@@ -768,11 +649,13 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Buffer<W> {
     ns_id: i64,
     id: i64,
   ) -> Result<bool, Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(PhantomData<&'a ()>, Value, i64, i64);
     self
       .neovim
       .call(
         "nvim_buf_del_extmark",
-        [self.code_data.clone(), Value::from(ns_id), Value::from(id)],
+        Args(std::marker::PhantomData, self.code_data.clone(), ns_id, id),
       )
       .await??
       .try_unpack()
@@ -786,18 +669,29 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Buffer<W> {
     col_start: i64,
     col_end: i64,
   ) -> Result<i64, Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(
+      PhantomData<&'a ()>,
+      Value,
+      i64,
+      &'a str,
+      i64,
+      i64,
+      i64,
+    );
     self
       .neovim
       .call(
         "nvim_buf_add_highlight",
-        [
+        Args(
+          std::marker::PhantomData,
           self.code_data.clone(),
-          Value::from(src_id),
-          Value::from(hl_group),
-          Value::from(line),
-          Value::from(col_start),
-          Value::from(col_end),
-        ],
+          src_id,
+          hl_group,
+          line,
+          col_start,
+          col_end,
+        ),
       )
       .await??
       .try_unpack()
@@ -809,16 +703,19 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Buffer<W> {
     line_start: i64,
     line_end: i64,
   ) -> Result<(), Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(PhantomData<&'a ()>, Value, i64, i64, i64);
     self
       .neovim
       .call(
         "nvim_buf_clear_namespace",
-        [
+        Args(
+          std::marker::PhantomData,
           self.code_data.clone(),
-          Value::from(ns_id),
-          Value::from(line_start),
-          Value::from(line_end),
-        ],
+          ns_id,
+          line_start,
+          line_end,
+        ),
       )
       .await??
       .try_unpack()
@@ -831,34 +728,54 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Buffer<W> {
     chunks: std::vec::Vec<Value>,
     opts: std::vec::Vec<(Value, Value)>,
   ) -> Result<i64, Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(
+      PhantomData<&'a ()>,
+      Value,
+      i64,
+      i64,
+      std::vec::Vec<Value>,
+      std::vec::Vec<(Value, Value)>,
+    );
     self
       .neovim
       .call(
         "nvim_buf_set_virtual_text",
-        [
+        Args(
+          std::marker::PhantomData,
           self.code_data.clone(),
-          Value::from(src_id),
-          Value::from(line),
-          Value::from(chunks),
-          Value::from(opts),
-        ],
+          src_id,
+          line,
+          chunks,
+          opts,
+        ),
       )
       .await??
       .try_unpack()
       .map_err(|v| Box::new(CallError::WrongValueType(v)))
   }
   pub async fn nvim_buf_call(&self) -> Result<Value, Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(PhantomData<&'a ()>, Value);
     self
       .neovim
-      .call("nvim_buf_call", [self.code_data.clone(), Value::from(fun)])
+      .call(
+        "nvim_buf_call",
+        Args(std::marker::PhantomData, self.code_data.clone(), fun),
+      )
       .await??
       .try_unpack()
       .map_err(|v| Box::new(CallError::WrongValueType(v)))
   }
   pub async fn nvim_buf_get_number(&self) -> Result<i64, Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(PhantomData<&'a ()>, Value);
     self
       .neovim
-      .call("nvim_buf_get_number", [self.code_data.clone()])
+      .call(
+        "nvim_buf_get_number",
+        Args(std::marker::PhantomData, self.code_data.clone()),
+      )
       .await??
       .try_unpack()
       .map_err(|v| Box::new(CallError::WrongValueType(v)))
@@ -869,16 +786,318 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Buffer<W> {
     line_start: i64,
     line_end: i64,
   ) -> Result<(), Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(PhantomData<&'a ()>, Value, i64, i64, i64);
     self
       .neovim
       .call(
         "nvim_buf_clear_highlight",
-        [
+        Args(
+          std::marker::PhantomData,
           self.code_data.clone(),
-          Value::from(ns_id),
-          Value::from(line_start),
-          Value::from(line_end),
-        ],
+          ns_id,
+          line_start,
+          line_end,
+        ),
+      )
+      .await??
+      .try_unpack()
+      .map_err(|v| Box::new(CallError::WrongValueType(v)))
+  }
+}
+use crate::Window;
+impl<W: AsyncWrite + Send + Unpin + 'static> Window<W> {
+  pub fn new(code_data: Value, neovim: Neovim<W>) -> Window<W> {
+    Window { code_data, neovim }
+  }
+  #[doc = r" Internal value, that represent type"]
+  pub fn get_value(&self) -> &Value {
+    &self.code_data
+  }
+  pub async fn nvim_win_set_buf(
+    &self,
+    buffer: Window<W>,
+  ) -> Result<(), Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(PhantomData<&'a ()>, Value, Window<W>);
+    self
+      .neovim
+      .call(
+        "nvim_win_set_buf",
+        Args(std::marker::PhantomData, self.code_data.clone(), buffer),
+      )
+      .await??
+      .try_unpack()
+      .map_err(|v| Box::new(CallError::WrongValueType(v)))
+  }
+  pub async fn nvim_win_get_cursor(
+    &self,
+  ) -> Result<(i64, i64), Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(PhantomData<&'a ()>, Value);
+    self
+      .neovim
+      .call(
+        "nvim_win_get_cursor",
+        Args(std::marker::PhantomData, self.code_data.clone()),
+      )
+      .await??
+      .try_unpack()
+      .map_err(|v| Box::new(CallError::WrongValueType(v)))
+  }
+  pub async fn nvim_win_set_cursor(
+    &self,
+    pos: (i64, i64),
+  ) -> Result<(), Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(PhantomData<&'a ()>, Value, (i64, i64));
+    self
+      .neovim
+      .call(
+        "nvim_win_set_cursor",
+        Args(std::marker::PhantomData, self.code_data.clone(), pos),
+      )
+      .await??
+      .try_unpack()
+      .map_err(|v| Box::new(CallError::WrongValueType(v)))
+  }
+  pub async fn nvim_win_get_height(&self) -> Result<i64, Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(PhantomData<&'a ()>, Value);
+    self
+      .neovim
+      .call(
+        "nvim_win_get_height",
+        Args(std::marker::PhantomData, self.code_data.clone()),
+      )
+      .await??
+      .try_unpack()
+      .map_err(|v| Box::new(CallError::WrongValueType(v)))
+  }
+  pub async fn nvim_win_set_height(
+    &self,
+    height: i64,
+  ) -> Result<(), Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(PhantomData<&'a ()>, Value, i64);
+    self
+      .neovim
+      .call(
+        "nvim_win_set_height",
+        Args(std::marker::PhantomData, self.code_data.clone(), height),
+      )
+      .await??
+      .try_unpack()
+      .map_err(|v| Box::new(CallError::WrongValueType(v)))
+  }
+  pub async fn nvim_win_get_width(&self) -> Result<i64, Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(PhantomData<&'a ()>, Value);
+    self
+      .neovim
+      .call(
+        "nvim_win_get_width",
+        Args(std::marker::PhantomData, self.code_data.clone()),
+      )
+      .await??
+      .try_unpack()
+      .map_err(|v| Box::new(CallError::WrongValueType(v)))
+  }
+  pub async fn nvim_win_set_width(
+    &self,
+    width: i64,
+  ) -> Result<(), Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(PhantomData<&'a ()>, Value, i64);
+    self
+      .neovim
+      .call(
+        "nvim_win_set_width",
+        Args(std::marker::PhantomData, self.code_data.clone(), width),
+      )
+      .await??
+      .try_unpack()
+      .map_err(|v| Box::new(CallError::WrongValueType(v)))
+  }
+  pub async fn nvim_win_get_var(
+    &self,
+    name: &str,
+  ) -> Result<Value, Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(PhantomData<&'a ()>, Value, &'a str);
+    self
+      .neovim
+      .call(
+        "nvim_win_get_var",
+        Args(std::marker::PhantomData, self.code_data.clone(), name),
+      )
+      .await??
+      .try_unpack()
+      .map_err(|v| Box::new(CallError::WrongValueType(v)))
+  }
+  pub async fn nvim_win_set_var(
+    &self,
+    name: &str,
+    value: Value,
+  ) -> Result<(), Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(PhantomData<&'a ()>, Value, &'a str, Value);
+    self
+      .neovim
+      .call(
+        "nvim_win_set_var",
+        Args(
+          std::marker::PhantomData,
+          self.code_data.clone(),
+          name,
+          value,
+        ),
+      )
+      .await??
+      .try_unpack()
+      .map_err(|v| Box::new(CallError::WrongValueType(v)))
+  }
+  pub async fn nvim_win_del_var(
+    &self,
+    name: &str,
+  ) -> Result<(), Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(PhantomData<&'a ()>, Value, &'a str);
+    self
+      .neovim
+      .call(
+        "nvim_win_del_var",
+        Args(std::marker::PhantomData, self.code_data.clone(), name),
+      )
+      .await??
+      .try_unpack()
+      .map_err(|v| Box::new(CallError::WrongValueType(v)))
+  }
+  pub async fn nvim_win_get_option(
+    &self,
+    name: &str,
+  ) -> Result<Value, Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(PhantomData<&'a ()>, Value, &'a str);
+    self
+      .neovim
+      .call(
+        "nvim_win_get_option",
+        Args(std::marker::PhantomData, self.code_data.clone(), name),
+      )
+      .await??
+      .try_unpack()
+      .map_err(|v| Box::new(CallError::WrongValueType(v)))
+  }
+  pub async fn nvim_win_set_option(
+    &self,
+    name: &str,
+    value: Value,
+  ) -> Result<(), Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(PhantomData<&'a ()>, Value, &'a str, Value);
+    self
+      .neovim
+      .call(
+        "nvim_win_set_option",
+        Args(
+          std::marker::PhantomData,
+          self.code_data.clone(),
+          name,
+          value,
+        ),
+      )
+      .await??
+      .try_unpack()
+      .map_err(|v| Box::new(CallError::WrongValueType(v)))
+  }
+  pub async fn nvim_win_get_position(
+    &self,
+  ) -> Result<(i64, i64), Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(PhantomData<&'a ()>, Value);
+    self
+      .neovim
+      .call(
+        "nvim_win_get_position",
+        Args(std::marker::PhantomData, self.code_data.clone()),
+      )
+      .await??
+      .try_unpack()
+      .map_err(|v| Box::new(CallError::WrongValueType(v)))
+  }
+  pub async fn nvim_win_get_number(&self) -> Result<i64, Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(PhantomData<&'a ()>, Value);
+    self
+      .neovim
+      .call(
+        "nvim_win_get_number",
+        Args(std::marker::PhantomData, self.code_data.clone()),
+      )
+      .await??
+      .try_unpack()
+      .map_err(|v| Box::new(CallError::WrongValueType(v)))
+  }
+  pub async fn nvim_win_is_valid(&self) -> Result<bool, Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(PhantomData<&'a ()>, Value);
+    self
+      .neovim
+      .call(
+        "nvim_win_is_valid",
+        Args(std::marker::PhantomData, self.code_data.clone()),
+      )
+      .await??
+      .try_unpack()
+      .map_err(|v| Box::new(CallError::WrongValueType(v)))
+  }
+  pub async fn nvim_win_set_config(
+    &self,
+    config: std::vec::Vec<(Value, Value)>,
+  ) -> Result<(), Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(
+      PhantomData<&'a ()>,
+      Value,
+      std::vec::Vec<(Value, Value)>,
+    );
+    self
+      .neovim
+      .call(
+        "nvim_win_set_config",
+        Args(std::marker::PhantomData, self.code_data.clone(), config),
+      )
+      .await??
+      .try_unpack()
+      .map_err(|v| Box::new(CallError::WrongValueType(v)))
+  }
+  pub async fn nvim_win_get_config(
+    &self,
+  ) -> Result<std::vec::Vec<(Value, Value)>, Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(PhantomData<&'a ()>, Value);
+    self
+      .neovim
+      .call(
+        "nvim_win_get_config",
+        Args(std::marker::PhantomData, self.code_data.clone()),
+      )
+      .await??
+      .try_unpack()
+      .map_err(|v| Box::new(CallError::WrongValueType(v)))
+  }
+  pub async fn nvim_win_close(
+    &self,
+    force: bool,
+  ) -> Result<(), Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(PhantomData<&'a ()>, Value, bool);
+    self
+      .neovim
+      .call(
+        "nvim_win_close",
+        Args(std::marker::PhantomData, self.code_data.clone(), force),
       )
       .await??
       .try_unpack()
