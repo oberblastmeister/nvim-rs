@@ -11,7 +11,7 @@ pub struct Tabpage<W>
 where
   W: AsyncWrite + Send + Unpin + 'static,
 {
-  pub(crate) code_data: Value,
+  pub(crate) code_data: u32,
   pub(crate) neovim: Neovim<W>,
 }
 

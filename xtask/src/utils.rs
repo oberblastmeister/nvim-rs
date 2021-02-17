@@ -1,9 +1,8 @@
-use std::{path::Path, process::Command};
 use std::{env, path::PathBuf};
+use std::path::Path;
 
-use eyre::{bail, Result};
-use rmp_serde::decode::from_read;
-use xshell::{cmd, read_file, write_file};
+use eyre::Result;
+use xshell::cmd;
 
 pub fn xtask_root() -> PathBuf {
   Path::new(
@@ -21,9 +20,10 @@ pub fn nvim_path() -> PathBuf {
   project_root().join("neovim/build/bin/nvim")
 }
 
-pub const PREAMBLE: &str = "Generated file, do not edit by hand, see `xtask/src/codegen`";
+pub const PREAMBLE: &str =
+  "Generated file, do not edit by hand, see `xtask/src/codegen`";
 
 pub fn reformat(text: &str) -> Result<String> {
-    let stdout = cmd!("rustfmt").stdin(text).read()?;
-    Ok(format!("//! {}\n\n{}\n", PREAMBLE, stdout))
+  let stdout = cmd!("rustfmt").stdin(text).read()?;
+  Ok(format!("//! {}\n\n{}\n", PREAMBLE, stdout))
 }

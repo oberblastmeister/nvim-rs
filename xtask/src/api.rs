@@ -1,15 +1,18 @@
-//! This module contains rust structs that represent the neovim api. They all derive `Serialize`
-//! and `Deserialize`
+//! This module contains rust structs that represent the neovim api. They all
+//! derive `Serialize` and `Deserialize`
 
-use std::{borrow::Cow, collections::HashMap};
+use std::{
+  borrow::Cow,
+  collections::{HashMap, HashSet},
+  mem::{self, ManuallyDrop, MaybeUninit},
+  panic, process,
+};
 
 use getset::Getters;
 use lazy_static::lazy_static;
-use proc_macro2::Span;
-use quote::format_ident;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use syn::{parse_quote, GenericArgument, TypePath};
+use syn::parse_quote;
 
 lazy_static! {
   static ref UNBOUND_ARRAY_RE: Regex =
@@ -41,6 +44,19 @@ impl Api {
       .iter()
       .filter(move |func| func.name().starts_with(prefix));
     Some(iter)
+  }
+
+  fn get_prefixes(&self) -> Vec<&str> {
+    self.types().values().map(|et| &**et.prefix()).collect()
+  }
+
+  pub fn non_ext_type_functions(&self) -> impl Iterator<Item = &Function> {
+    let prefixes = self.get_prefixes();
+    self.functions().iter().filter(move |func| {
+      !prefixes
+        .iter()
+        .any(|prefix| func.name().starts_with(prefix))
+    })
   }
 }
 
@@ -101,7 +117,7 @@ impl Type {
         parse_quote! { std::vec::Vec<(Value, Value)> }
       }
       "Window" => parse_quote! { Window<W> },
-      "Buffer" => parse_quote! { Window<W> },
+      "Buffer" => parse_quote! { Buffer<W> },
       "Tabpage" => parse_quote! { Tabpage<W> },
       s if UNBOUND_ARRAY_RE.is_match(s) => {
         let inner = UNBOUND_ARRAY_RE
@@ -112,8 +128,7 @@ impl Type {
           .as_str();
         let inner_ty = Type(inner.into());
         let inner_rust = inner_ty.to_rust_type_ref().unwrap();
-        // parse_quote! { &[#inner_rust] }
-        parse_quote! { std::vec::Vec<#inner_rust> }
+        parse_quote! { &[#inner_rust] }
       }
       _ => return None,
     })
@@ -138,33 +153,28 @@ impl Type {
   }
 }
 
-pub fn give_lifetime(tipe: &mut syn::Type, lifetime_name: &str) -> bool {
-  let mut gave = false;
-
-  match tipe {
-    syn::Type::Reference(ref mut type_ref) if type_ref.lifetime.is_none() => {
-      let lifetime = syn::Lifetime::new(lifetime_name, Span::call_site());
-      type_ref.lifetime = Some(lifetime);
-      gave = true;
-    }
-    syn::Type::Path(TypePath { ref mut path, .. }) => {
-      let last_seg = path.segments.iter_mut().last().unwrap();
-      match last_seg.arguments {
-        syn::PathArguments::None => (),
-        syn::PathArguments::AngleBracketed(ref mut angle_bracketed) => {
-          for generic_arg in angle_bracketed.args.iter_mut() {
-            if let GenericArgument::Type(tipe) = generic_arg {
-              gave = give_lifetime(tipe, lifetime_name) || gave;
-            }
-          }
-        }
-        _ => (),
-      }
-    }
-    _ => (),
+// /// modify a mutable reference in place with a function that must take
+/// ownership of the value
+fn modify<T>(t: &mut T, f: impl FnOnce(T) -> T) {
+  let t_ptr = t as *mut T;
+  unsafe {
+    let new = panic::catch_unwind(panic::AssertUnwindSafe(|| f(t_ptr.read())))
+      .unwrap_or_else(|_| process::abort());
+    t_ptr.write(new);
   }
+}
 
-  gave
+fn modify_default<T: Default>(t: &mut T, f: impl FnOnce(T) -> T) {
+  let t_ptr = t as *mut T;
+
+  unsafe {
+    let new = panic::catch_unwind(panic::AssertUnwindSafe(|| f(t_ptr.read())))
+      .unwrap_or_else(|e| {
+        t_ptr.write(T::default()); // prevent from double freeing
+        panic!("Modify closure panicked: {:?}", e);
+      });
+    t_ptr.write(new);
+  }
 }
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Getters)]

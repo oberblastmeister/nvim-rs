@@ -1,13 +1,16 @@
-use crate::api::{give_lifetime, Api, Function};
-use crate::utils;
+use crate::{
+  api::{Api, Function},
+  syn_helpers::{is_ext_type, AddLifetime, MaybeQuote},
+  utils,
+};
 
-use std::{collections::HashSet, process::Command};
-use std::{io::Cursor, path::Path};
+use std::{collections::HashSet, io::Cursor, path::Path, process::Command};
 
 use eyre::{eyre, Result};
 use proc_macro2::{Span, TokenStream};
 use quote::{format_ident, quote};
 use rmp_serde::decode;
+use syn::{fold::Fold, parse_quote as pq};
 use xshell::{cmd, read_file, write_file};
 
 pub fn gen_from_api(api: Api) -> Result<String> {
@@ -28,7 +31,7 @@ pub fn gen_from_api(api: Api) -> Result<String> {
   ]
   .iter()
   .copied()
-  .collect::<HashSet<&'static str>>();
+  .collect::<HashSet<_>>();
 
   let ext_type_impls = api
     .types()
@@ -43,12 +46,17 @@ pub fn gen_from_api(api: Api) -> Result<String> {
     })
     .collect::<Vec<_>>();
 
+  let non_ext_type_functions = api
+    .non_ext_type_functions()
+    .map(|func| gen_function(func, false));
+
   let tokens = quote! {
     use crate::{Value, Neovim, error::CallError, rpc::unpack::TryUnpack};
-    use crate::rpc::model::IntoVal;
     use futures::io::AsyncWrite;
     use serde::Serialize;
     use std::marker::PhantomData;
+
+
 
     #(#ext_type_impls)*
   };
@@ -62,10 +70,16 @@ pub fn gen_impl(ext_type_name: &str, functions: Vec<&Function>) -> TokenStream {
   let ext_type_methods = functions.iter().filter_map(|f| gen_function(f, true));
 
   quote! {
-    use crate::#ext_type_ident;
+    pub struct #ext_type_ident<W>
+    where
+        W: AsyncWrite + Send + Unpin + 'static,
+    {
+        pub(crate) code_data: u32,
+        pub(crate) neovim: Neovim<W>,
+    }
 
     impl<W: AsyncWrite + Send + Unpin + 'static> #ext_type_ident<W> {
-      pub fn new(code_data: Value, neovim: Neovim<W>) -> #ext_type_ident<W> {
+      pub fn new(code_data: u32, neovim: Neovim<W>) -> #ext_type_ident<W> {
         #ext_type_ident {
           code_data,
           neovim,
@@ -73,8 +87,8 @@ pub fn gen_impl(ext_type_name: &str, functions: Vec<&Function>) -> TokenStream {
       }
 
       /// Internal value, that represent type
-      pub fn get_value(&self) -> &Value {
-        &self.code_data
+      pub fn get_value(&self) -> u32 {
+        self.code_data
       }
 
       #(#ext_type_methods)*
@@ -82,12 +96,13 @@ pub fn gen_impl(ext_type_name: &str, functions: Vec<&Function>) -> TokenStream {
   }
 }
 
-fn gen_function(f: &Function, is_ext_type: bool) -> Option<TokenStream> {
+fn gen_function(f: &Function, gen_ext_type: bool) -> Option<TokenStream> {
   let name_str = f.name();
   let name = format_ident!("{}", name_str);
 
-  let skip_amount = if is_ext_type { 1 } else { 0 };
+  let skip_amount = if gen_ext_type { 1 } else { 0 };
 
+  // the name of the params
   let param_names: Vec<_> = f
     .parameters()
     .iter()
@@ -95,6 +110,7 @@ fn gen_function(f: &Function, is_ext_type: bool) -> Option<TokenStream> {
     .map(|param| format_ident!("{}", param.name()))
     .collect();
 
+  // the types of the params
   let param_types = f
     .parameters()
     .iter()
@@ -106,39 +122,53 @@ fn gen_function(f: &Function, is_ext_type: bool) -> Option<TokenStream> {
     .collect::<Option<Vec<_>>>()?; // we will skip functions that don't have a corresponding rust type
                                    // like LuaRef
 
-  let arg_param_types = f
+  let (arg_param_names, arg_param_types): (Vec<_>, Vec<_>) = f
     .parameters()
     .iter()
     .skip(skip_amount)
     .filter_map(|param| {
       let tipe_str = param.tipe();
       let mut tipe = tipe_str.to_rust_type_ref()?;
-      give_lifetime(&mut tipe, "'a");
-      Some(tipe)
+
+      let name = if is_ext_type(&tipe) {
+        tipe = pq! { u32 };
+        let name = format_ident!("{}", param.name());
+        quote! { #name.get_value() }
+      } else {
+        let name = format_ident!("{}", param.name());
+        quote! { #name }
+      };
+
+      let tipe = Some(AddLifetime::new("'a").fold_type(tipe));
+
+      tipe.map(|tipe| (name, tipe))
     })
-    .collect::<Vec<_>>();
+    .unzip();
 
   let return_type = f
     .return_type()
     .to_rust_type_val()
     .expect("Return type was not converted to rust type");
 
-  let deprecated_doc = if let Some(since) = f.deprecated_since() {
-    let s = format!("Deprecated since {}", since);
+  let deprecated_doc = MaybeQuote(f.deprecated_since().map(|n| {
+    let s = format!("Deprecated since {}", n);
     quote! { #[doc = #s] }
-  } else {
-    quote! {}
-  };
+  }));
 
   let since_doc = {
     let s = format!("Since {}", f.since());
     quote! { #[doc = #s] }
   };
 
+  let code_data_ty = MaybeQuote(gen_ext_type.then(|| quote! { u32, }));
+
+  let code_data_param =
+    MaybeQuote(gen_ext_type.then(|| quote! { self.code_data.clone(), }));
+
   let args_struct = quote! {
     #[derive(Debug, Serialize)]
     // pub struct Args<'a, W: AsyncWrite + Send + Unpin + 'static>(PhantomData<fn(&'a ())>, Value, #(#arg_param_types),*);
-    pub struct Args<'a>(PhantomData<&'a ()>, Value, #(#arg_param_types),*);
+    pub struct Args<'a>(PhantomData<&'a ()>, #code_data_ty #(#arg_param_types),*);
   };
 
   Some(quote! {
@@ -151,8 +181,8 @@ fn gen_function(f: &Function, is_ext_type: bool) -> Option<TokenStream> {
         #name_str,
         Args(
           std::marker::PhantomData,
-          self.code_data.clone(),
-          #(#param_names),*
+          #code_data_param
+          #(#arg_param_names),*
         )
       )
       .await??
