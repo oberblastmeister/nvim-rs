@@ -40,7 +40,7 @@ pub mod uioptions;
 pub mod create;
 
 pub use crate::{
-  neovim_api::{buffer, Tabpage, Window},
+  neovim_api::{Buffer, Tabpage, Window},
   neovim::Neovim,
   rpc::handler::Handler,
   uioptions::{UiAttachOptions, UiOption},

@@ -290,7 +290,7 @@ where
   /// The quit command is 'qa!' which will make Nvim quit without
   /// saving anything.
   pub async fn quit_no_save(&mut self) -> Result<(), Box<CallError>> {
-    self.command("qa!").await
+    self.nvim_command("qa!").await
   }
 }
 

@@ -63,23 +63,23 @@ impl Api {
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Getters)]
 #[get = "pub"]
 pub struct Version {
-  api_compatible: u32,
-  api_level: u32,
+  api_compatible: i64,
+  api_level: i64,
   api_prerelease: bool,
-  major: u32,
-  minor: u32,
-  patch: u32,
+  major: i64,
+  minor: i64,
+  patch: i64,
 }
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Getters)]
 #[get = "pub"]
 pub struct Function {
-  deprecated_since: Option<u32>,
+  deprecated_since: Option<i64>,
   method: bool,
   name: String,
   parameters: Vec<Param>,
   return_type: Type,
-  since: u32,
+  since: i64,
 }
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -182,18 +182,18 @@ fn modify_default<T: Default>(t: &mut T, f: impl FnOnce(T) -> T) {
 pub struct UiEvent {
   name: String,
   parameters: Vec<Param>,
-  since: u32,
+  since: i64,
 }
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Getters)]
 #[get = "pub"]
 pub struct ExtType {
-  id: u32,
+  id: i64,
   prefix: String,
 }
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Getters)]
 #[get = "pub"]
 pub struct ErrorType {
-  id: u32,
+  id: i64,
 }

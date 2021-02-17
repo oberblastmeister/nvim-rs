@@ -16,6 +16,7 @@ use xshell::{cmd, read_file, write_file};
 pub fn gen_from_api(api: Api) -> Result<String> {
   let manually_implemented = [
     "nvim_ui_attach",
+    "ui_attach",
     "nvim_tabpage_list_wins",
     "nvim_tabpage_get_win",
     "nvim_win_get_buf",
@@ -40,6 +41,7 @@ pub fn gen_from_api(api: Api) -> Result<String> {
       let api_funcs: Vec<_> = api
         .ext_type_functions(k)
         .unwrap()
+        .filter(|f| f.deprecated_since().is_none())
         .filter(|f| !manually_implemented.contains(&**f.name()))
         .collect();
       gen_impl(k, api_funcs)
@@ -48,7 +50,10 @@ pub fn gen_from_api(api: Api) -> Result<String> {
 
   let non_ext_type_functions = api
     .non_ext_type_functions()
-    .map(|func| gen_function(func, false));
+    .filter(|f| f.deprecated_since().is_none())
+    .filter(|f| !manually_implemented.contains(&**f.name()))
+    .filter_map(|func| gen_function(func, false))
+    .collect::<Vec<_>>();
 
   let tokens = quote! {
     use crate::{Value, Neovim, error::CallError, rpc::unpack::TryUnpack};
@@ -56,7 +61,9 @@ pub fn gen_from_api(api: Api) -> Result<String> {
     use serde::Serialize;
     use std::marker::PhantomData;
 
-
+    impl<W: AsyncWrite + Send + Unpin + 'static> Neovim<W> {
+        #(#non_ext_type_functions)*
+    }
 
     #(#ext_type_impls)*
   };
@@ -74,12 +81,12 @@ pub fn gen_impl(ext_type_name: &str, functions: Vec<&Function>) -> TokenStream {
     where
         W: AsyncWrite + Send + Unpin + 'static,
     {
-        pub(crate) code_data: u32,
+        pub(crate) code_data: i64,
         pub(crate) neovim: Neovim<W>,
     }
 
     impl<W: AsyncWrite + Send + Unpin + 'static> #ext_type_ident<W> {
-      pub fn new(code_data: u32, neovim: Neovim<W>) -> #ext_type_ident<W> {
+      pub fn new(code_data: i64, neovim: Neovim<W>) -> #ext_type_ident<W> {
         #ext_type_ident {
           code_data,
           neovim,
@@ -87,7 +94,7 @@ pub fn gen_impl(ext_type_name: &str, functions: Vec<&Function>) -> TokenStream {
       }
 
       /// Internal value, that represent type
-      pub fn get_value(&self) -> u32 {
+      pub fn get_value(&self) -> i64 {
         self.code_data
       }
 
@@ -107,7 +114,7 @@ fn gen_function(f: &Function, gen_ext_type: bool) -> Option<TokenStream> {
     .parameters()
     .iter()
     .skip(skip_amount)
-    .map(|param| format_ident!("{}", param.name()))
+    .map(|param| format_ident!("r#{}", param.name()))
     .collect();
 
   // the types of the params
@@ -131,11 +138,11 @@ fn gen_function(f: &Function, gen_ext_type: bool) -> Option<TokenStream> {
       let mut tipe = tipe_str.to_rust_type_ref()?;
 
       let name = if is_ext_type(&tipe) {
-        tipe = pq! { u32 };
-        let name = format_ident!("{}", param.name());
+        tipe = pq! { i64 };
+        let name = format_ident!("r#{}", param.name());
         quote! { #name.get_value() }
       } else {
-        let name = format_ident!("{}", param.name());
+        let name = format_ident!("r#{}", param.name());
         quote! { #name }
       };
 
@@ -160,7 +167,7 @@ fn gen_function(f: &Function, gen_ext_type: bool) -> Option<TokenStream> {
     quote! { #[doc = #s] }
   };
 
-  let code_data_ty = MaybeQuote(gen_ext_type.then(|| quote! { u32, }));
+  let code_data_ty = MaybeQuote(gen_ext_type.then(|| quote! { i64, }));
 
   let code_data_param =
     MaybeQuote(gen_ext_type.then(|| quote! { self.code_data.clone(), }));
@@ -171,13 +178,15 @@ fn gen_function(f: &Function, gen_ext_type: bool) -> Option<TokenStream> {
     pub struct Args<'a>(PhantomData<&'a ()>, #code_data_ty #(#arg_param_types),*);
   };
 
+  let uses_internal_neovim = MaybeQuote(gen_ext_type.then(|| quote! { .neovim }));
+
   Some(quote! {
     #deprecated_doc
     #since_doc
     pub async fn #name(&self, #(#param_names: #param_types),*) -> Result<#return_type, Box<CallError>> {
       #args_struct
 
-      self.neovim.call(
+      self#uses_internal_neovim.call(
         #name_str,
         Args(
           std::marker::PhantomData,
