@@ -59,7 +59,7 @@ pub fn gen_from_api(api: Api) -> Result<String> {
 pub fn gen_impl(ext_type_name: &str, functions: Vec<&Function>) -> TokenStream {
   let ext_type_ident = format_ident!("{}", ext_type_name);
 
-  let ext_type_methods = functions.iter().map(|f| gen_function(f, true));
+  let ext_type_methods = functions.iter().filter_map(|f| gen_function(f, true));
 
   quote! {
     use crate::#ext_type_ident;
@@ -82,7 +82,7 @@ pub fn gen_impl(ext_type_name: &str, functions: Vec<&Function>) -> TokenStream {
   }
 }
 
-fn gen_function(f: &Function, is_ext_type: bool) -> TokenStream {
+fn gen_function(f: &Function, is_ext_type: bool) -> Option<TokenStream> {
   let name_str = f.name();
   let name = format_ident!("{}", name_str);
 
@@ -99,12 +99,12 @@ fn gen_function(f: &Function, is_ext_type: bool) -> TokenStream {
     .parameters()
     .iter()
     .skip(skip_amount)
-    .filter_map(|param| {
+    .map(|param| {
       let tipe_str = param.tipe();
-      let tipe = tipe_str.to_rust_type_ref()?;
-      Some(tipe)
+      tipe_str.to_rust_type_ref()
     })
-    .collect::<Vec<_>>();
+    .collect::<Option<Vec<_>>>()?; // we will skip functions that don't have a corresponding rust type
+                                   // like LuaRef
 
   let arg_param_types = f
     .parameters()
@@ -123,13 +123,27 @@ fn gen_function(f: &Function, is_ext_type: bool) -> TokenStream {
     .to_rust_type_val()
     .expect("Return type was not converted to rust type");
 
+  let deprecated_doc = if let Some(since) = f.deprecated_since() {
+    let s = format!("Deprecated since {}", since);
+    quote! { #[doc = #s] }
+  } else {
+    quote! {}
+  };
+
+  let since_doc = {
+    let s = format!("Since {}", f.since());
+    quote! { #[doc = #s] }
+  };
+
   let args_struct = quote! {
     #[derive(Debug, Serialize)]
     // pub struct Args<'a, W: AsyncWrite + Send + Unpin + 'static>(PhantomData<fn(&'a ())>, Value, #(#arg_param_types),*);
     pub struct Args<'a>(PhantomData<&'a ()>, Value, #(#arg_param_types),*);
   };
 
-  quote! {
+  Some(quote! {
+    #deprecated_doc
+    #since_doc
     pub async fn #name(&self, #(#param_names: #param_types),*) -> Result<#return_type, Box<CallError>> {
       #args_struct
 
@@ -145,7 +159,7 @@ fn gen_function(f: &Function, is_ext_type: bool) -> TokenStream {
       .try_unpack()
       .map_err(|v| Box::new(CallError::WrongValueType(v)))
     }
-  }
+  })
 }
 
 pub fn run() -> Result<()> {
