@@ -1,5 +1,5 @@
 use crate::{
-  api::{Api, Function},
+  api::{Api, ExtType, Function, Type},
   syn_helpers::{is_ext_type, AddLifetime, MaybeQuote},
   utils,
 };
@@ -36,15 +36,15 @@ pub fn gen_from_api(api: Api) -> Result<String> {
 
   let ext_type_impls = api
     .types()
-    .keys()
-    .map(|k| {
+    .into_iter()
+    .map(|(k, v)| {
       let api_funcs: Vec<_> = api
         .ext_type_functions(k)
         .unwrap()
         .filter(|f| f.deprecated_since().is_none())
         .filter(|f| !manually_implemented.contains(&**f.name()))
         .collect();
-      gen_impl(k, api_funcs)
+      gen_impl(k, v, api_funcs)
     })
     .collect::<Vec<_>>();
 
@@ -52,7 +52,7 @@ pub fn gen_from_api(api: Api) -> Result<String> {
     .non_ext_type_functions()
     .filter(|f| f.deprecated_since().is_none())
     .filter(|f| !manually_implemented.contains(&**f.name()))
-    .filter_map(|func| gen_function(func, false))
+    .filter_map(|func| gen_function(func, false, Some("nvim_")))
     .collect::<Vec<_>>();
 
   let tokens = quote! {
@@ -71,10 +71,16 @@ pub fn gen_from_api(api: Api) -> Result<String> {
   Ok(utils::reformat(&tokens.to_string())?)
 }
 
-pub fn gen_impl(ext_type_name: &str, functions: Vec<&Function>) -> TokenStream {
+pub fn gen_impl(
+  ext_type_name: &str,
+  ext_type: &ExtType,
+  functions: Vec<&Function>,
+) -> TokenStream {
   let ext_type_ident = format_ident!("{}", ext_type_name);
 
-  let ext_type_methods = functions.iter().filter_map(|f| gen_function(f, true));
+  let ext_type_methods = functions
+    .iter()
+    .filter_map(|f| gen_function(f, true, Some(ext_type.prefix())));
 
   quote! {
     pub struct #ext_type_ident<W>
@@ -103,11 +109,18 @@ pub fn gen_impl(ext_type_name: &str, functions: Vec<&Function>) -> TokenStream {
   }
 }
 
-fn gen_function(f: &Function, gen_ext_type: bool) -> Option<TokenStream> {
-  let name_str = f.name();
+fn gen_function(
+  f: &Function,
+  ext_type: bool,
+  strip_prefix: Option<&str>,
+) -> Option<TokenStream> {
+  let name_str = strip_prefix
+    .map(|prefix| f.name().strip_prefix(prefix).unwrap_or(prefix))
+    .unwrap_or_else(|| f.name());
+
   let name = format_ident!("{}", name_str);
 
-  let skip_amount = if gen_ext_type { 1 } else { 0 };
+  let skip_amount = if ext_type { 1 } else { 0 };
 
   // the name of the params
   let param_names: Vec<_> = f
@@ -167,10 +180,10 @@ fn gen_function(f: &Function, gen_ext_type: bool) -> Option<TokenStream> {
     quote! { #[doc = #s] }
   };
 
-  let code_data_ty = MaybeQuote(gen_ext_type.then(|| quote! { i64, }));
+  let code_data_ty = MaybeQuote(ext_type.then(|| quote! { i64, }));
 
   let code_data_param =
-    MaybeQuote(gen_ext_type.then(|| quote! { self.code_data.clone(), }));
+    MaybeQuote(ext_type.then(|| quote! { self.get_value(), }));
 
   let args_struct = quote! {
     #[derive(Debug, Serialize)]
@@ -178,7 +191,7 @@ fn gen_function(f: &Function, gen_ext_type: bool) -> Option<TokenStream> {
     pub struct Args<'a>(PhantomData<&'a ()>, #code_data_ty #(#arg_param_types),*);
   };
 
-  let uses_internal_neovim = MaybeQuote(gen_ext_type.then(|| quote! { .neovim }));
+  let uses_internal_neovim = MaybeQuote(ext_type.then(|| quote! { .neovim }));
 
   Some(quote! {
     #deprecated_doc
