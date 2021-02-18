@@ -268,23 +268,23 @@ where
     }
   }
 
-  /// Register as a remote UI.
-  ///
-  /// After this method is called, the client will receive redraw notifications.
-  pub async fn ui_attach(
-    &mut self,
-    width: i64,
-    height: i64,
-    opts: &UiAttachOptions,
-  ) -> Result<(), Box<CallError>> {
-    self
-      .call(
-        "nvim_ui_attach",
-        call_args!(width, height, opts.to_value_map()),
-      )
-      .await?
-      .map(|_| Ok(()))?
-  }
+  ///// Register as a remote UI.
+  /////
+  ///// After this method is called, the client will receive redraw notifications.
+  //pub async fn ui_attach(
+  //  &mut self,
+  //  width: i64,
+  //  height: i64,
+  //  opts: &UiAttachOptions,
+  //) -> Result<(), Box<CallError>> {
+  //  self
+  //    .call(
+  //      "nvim_ui_attach",
+  //      call_args!(width, height, opts.to_value_map()),
+  //    )
+  //    .await?
+  //    .map(|_| Ok(()))?
+  //}
 
   /// Send a quit command to Nvim.
   /// The quit command is 'qa!' which will make Nvim quit without

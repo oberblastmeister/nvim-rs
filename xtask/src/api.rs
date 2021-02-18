@@ -14,19 +14,19 @@ pub use de::{ErrorType, Function, Type, UiEvent, Version};
 
 lazy_static! {
   static ref MANUALLY_IMPLEMENTED: HashSet<&'static str> = [
-    "nvim_ui_attach",
-    "nvim_tabpage_list_wins",
-    "nvim_tabpage_get_win",
-    "nvim_win_get_buf",
-    "nvim_win_get_tabpage",
-    "nvim_list_bufs",
-    "nvim_get_current_buf",
-    "nvim_list_wins",
-    "nvim_get_current_win",
-    "nvim_create_buf",
-    "nvim_open_win",
-    "nvim_list_tabpages",
-    "nvim_get_current_tabpage",
+    // "nvim_ui_attach",
+    // "nvim_tabpage_list_wins",
+    // "nvim_tabpage_get_win",
+    // "nvim_win_get_buf",
+    // "nvim_win_get_tabpage",
+    // "nvim_list_bufs",
+    // "nvim_get_current_buf",
+    // "nvim_list_wins",
+    // "nvim_get_current_win",
+    // "nvim_create_buf",
+    // "nvim_open_win",
+    // "nvim_list_tabpages",
+    // "nvim_get_current_tabpage",
   ]
   .iter()
   .copied()
@@ -135,6 +135,11 @@ fn add_function(
     ext_type.functions.push(function);
     None
   } else {
+    function.name = function
+      .name
+      .strip_prefix("nvim_")
+      .unwrap_or(&function.name)
+      .to_string();
     Some(function)
   }
 }

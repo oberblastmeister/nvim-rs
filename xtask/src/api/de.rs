@@ -1,12 +1,7 @@
 //! This module contains rust structs that represent the neovim api. They all
 //! derive `Serialize` and `Deserialize`
 
-use std::{
-  borrow::Cow,
-  collections::{HashMap, HashSet},
-  mem::{self, ManuallyDrop, MaybeUninit},
-  panic, process,
-};
+use std::collections::HashMap;
 
 use lazy_static::lazy_static;
 use regex::Regex;

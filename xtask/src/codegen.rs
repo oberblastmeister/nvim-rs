@@ -9,9 +9,9 @@ use std::{collections::HashSet, io::Cursor, path::Path, process::Command};
 use eyre::{eyre, Result};
 use proc_macro2::{Span, TokenStream};
 use quote::{format_ident, quote};
-use rmp_serde::decode;
 use syn::{fold::Fold, parse_quote as pq};
-use xshell::{cmd, read_file, write_file};
+use xshell::{read_file, write_file};
+use xshell::cmd;
 
 pub(crate) trait Gen {
   fn gen(&self) -> Result<TokenStream>;
@@ -19,26 +19,6 @@ pub(crate) trait Gen {
 
 impl Gen for Api {
   fn gen(&self) -> Result<TokenStream> {
-    let manually_implemented = [
-      "nvim_ui_attach",
-      "ui_attach",
-      "nvim_tabpage_list_wins",
-      "nvim_tabpage_get_win",
-      "nvim_win_get_buf",
-      "nvim_win_get_tabpage",
-      "nvim_list_bufs",
-      "nvim_get_current_buf",
-      "nvim_list_wins",
-      "nvim_get_current_win",
-      "nvim_create_buf",
-      "nvim_open_win",
-      "nvim_list_tabpages",
-      "nvim_get_current_tabpage",
-    ]
-    .iter()
-    .copied()
-    .collect::<HashSet<_>>();
-
     let ext_type_impls = self
       .types
       .iter()
@@ -49,15 +29,18 @@ impl Gen for Api {
       .functions
       .iter()
       .filter(|f| f.deprecated_since.is_none())
-      .filter(|f| !manually_implemented.contains(&*f.name))
       .map(Function::gen)
       .collect::<Result<Vec<_>>>()?;
 
+    let imports = quote! {
+      use crate::{Value, Neovim, error::CallError, rpc::unpack::TryUnpack};
+      use futures::io::AsyncWrite;
+      use serde::Serialize;
+      use std::marker::PhantomData;
+    };
+
     let tokens = quote! {
-        use crate::{Value, Neovim, error::CallError, rpc::unpack::TryUnpack};
-        use futures::io::AsyncWrite;
-        use serde::Serialize;
-        use std::marker::PhantomData;
+        #imports
 
         impl<W: AsyncWrite + Send + Unpin + 'static> Neovim<W> {
             #(#non_ext_type_functions)*
@@ -76,16 +59,18 @@ impl Gen for ExtType {
 
     let methods = self.functions.iter().map(|f| f.gen().unwrap());
 
+    let trait_bound = quote! { AsyncWrite + Send + Unpin + 'static };
+
     let res = quote! {
         pub struct #ident<W>
             where
-                W: AsyncWrite + Send + Unpin + 'static,
+                W: #trait_bound,
             {
                 pub(crate) code_data: i64,
                 pub(crate) neovim: Neovim<W>,
             }
 
-        impl<W: AsyncWrite + Send + Unpin + 'static> #ident<W> {
+        impl<W: #trait_bound> #ident<W> {
             pub fn new(code_data: i64, neovim: Neovim<W>) -> #ident<W> {
                 #ident {
                     code_data,
