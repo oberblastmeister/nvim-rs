@@ -178,14 +178,14 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Neovim<W> {
     &self,
     r#ns_id: i64,
     r#name: &str,
-    r#val: std::vec::Vec<(Value, Value)>,
+    r#val: &[(Value, Value)],
   ) -> Result<(), Box<CallError>> {
     #[derive(Debug, Serialize)]
     pub struct Args<'a>(
       PhantomData<&'a ()>,
       i64,
       &'a str,
-      std::vec::Vec<(Value, Value)>,
+      &'a [(Value, Value)],
     );
     self
       .call(
@@ -310,10 +310,10 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Neovim<W> {
   pub async fn exec_lua(
     &self,
     r#code: &str,
-    r#args: std::vec::Vec<Value>,
+    r#args: &[Value],
   ) -> Result<Value, Box<CallError>> {
     #[derive(Debug, Serialize)]
-    pub struct Args<'a>(PhantomData<&'a ()>, &'a str, std::vec::Vec<Value>);
+    pub struct Args<'a>(PhantomData<&'a ()>, &'a str, &'a [Value]);
     self
       .call("exec_lua", Args(std::marker::PhantomData, r#code, r#args))
       .await??
@@ -325,14 +325,14 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Neovim<W> {
     &self,
     r#msg: &str,
     r#log_level: i64,
-    r#opts: std::vec::Vec<(Value, Value)>,
+    r#opts: &[(Value, Value)],
   ) -> Result<Value, Box<CallError>> {
     #[derive(Debug, Serialize)]
     pub struct Args<'a>(
       PhantomData<&'a ()>,
       &'a str,
       i64,
-      std::vec::Vec<(Value, Value)>,
+      &'a [(Value, Value)],
     );
     self
       .call(
@@ -347,10 +347,10 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Neovim<W> {
   pub async fn call_function(
     &self,
     r#fn: &str,
-    r#args: std::vec::Vec<Value>,
+    r#args: &[Value],
   ) -> Result<Value, Box<CallError>> {
     #[derive(Debug, Serialize)]
-    pub struct Args<'a>(PhantomData<&'a ()>, &'a str, std::vec::Vec<Value>);
+    pub struct Args<'a>(PhantomData<&'a ()>, &'a str, &'a [Value]);
     self
       .call(
         "call_function",
@@ -365,15 +365,10 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Neovim<W> {
     &self,
     r#dict: Value,
     r#fn: &str,
-    r#args: std::vec::Vec<Value>,
+    r#args: &[Value],
   ) -> Result<Value, Box<CallError>> {
     #[derive(Debug, Serialize)]
-    pub struct Args<'a>(
-      PhantomData<&'a ()>,
-      Value,
-      &'a str,
-      std::vec::Vec<Value>,
-    );
+    pub struct Args<'a>(PhantomData<&'a ()>, Value, &'a str, &'a [Value]);
     self
       .call(
         "call_dict_function",
@@ -584,16 +579,16 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Neovim<W> {
   #[doc = "Since 7"]
   pub async fn echo(
     &self,
-    r#chunks: std::vec::Vec<Value>,
+    r#chunks: &[Value],
     r#history: bool,
-    r#opts: std::vec::Vec<(Value, Value)>,
+    r#opts: &[(Value, Value)],
   ) -> Result<(), Box<CallError>> {
     #[derive(Debug, Serialize)]
     pub struct Args<'a>(
       PhantomData<&'a ()>,
-      std::vec::Vec<Value>,
+      &'a [Value],
       bool,
-      std::vec::Vec<(Value, Value)>,
+      &'a [(Value, Value)],
     );
     self
       .call(
@@ -798,10 +793,10 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Neovim<W> {
   #[doc = "Since 6"]
   pub async fn get_context(
     &self,
-    r#opts: std::vec::Vec<(Value, Value)>,
+    r#opts: &[(Value, Value)],
   ) -> Result<std::vec::Vec<(Value, Value)>, Box<CallError>> {
     #[derive(Debug, Serialize)]
-    pub struct Args<'a>(PhantomData<&'a ()>, std::vec::Vec<(Value, Value)>);
+    pub struct Args<'a>(PhantomData<&'a ()>, &'a [(Value, Value)]);
     self
       .call("get_context", Args(std::marker::PhantomData, r#opts))
       .await??
@@ -811,10 +806,10 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Neovim<W> {
   #[doc = "Since 6"]
   pub async fn load_context(
     &self,
-    r#dict: std::vec::Vec<(Value, Value)>,
+    r#dict: &[(Value, Value)],
   ) -> Result<Value, Box<CallError>> {
     #[derive(Debug, Serialize)]
-    pub struct Args<'a>(PhantomData<&'a ()>, std::vec::Vec<(Value, Value)>);
+    pub struct Args<'a>(PhantomData<&'a ()>, &'a [(Value, Value)]);
     self
       .call("load_context", Args(std::marker::PhantomData, r#dict))
       .await??
@@ -852,7 +847,7 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Neovim<W> {
     r#mode: &str,
     r#lhs: &str,
     r#rhs: &str,
-    r#opts: std::vec::Vec<(Value, Value)>,
+    r#opts: &[(Value, Value)],
   ) -> Result<(), Box<CallError>> {
     #[derive(Debug, Serialize)]
     pub struct Args<'a>(
@@ -860,7 +855,7 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Neovim<W> {
       &'a str,
       &'a str,
       &'a str,
-      std::vec::Vec<(Value, Value)>,
+      &'a [(Value, Value)],
     );
     self
       .call(
@@ -888,10 +883,10 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Neovim<W> {
   #[doc = "Since 4"]
   pub async fn get_commands(
     &self,
-    r#opts: std::vec::Vec<(Value, Value)>,
+    r#opts: &[(Value, Value)],
   ) -> Result<std::vec::Vec<(Value, Value)>, Box<CallError>> {
     #[derive(Debug, Serialize)]
-    pub struct Args<'a>(PhantomData<&'a ()>, std::vec::Vec<(Value, Value)>);
+    pub struct Args<'a>(PhantomData<&'a ()>, &'a [(Value, Value)]);
     self
       .call("get_commands", Args(std::marker::PhantomData, r#opts))
       .await??
@@ -914,19 +909,19 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Neovim<W> {
   pub async fn set_client_info(
     &self,
     r#name: &str,
-    r#version: std::vec::Vec<(Value, Value)>,
+    r#version: &[(Value, Value)],
     r#type: &str,
-    r#methods: std::vec::Vec<(Value, Value)>,
-    r#attributes: std::vec::Vec<(Value, Value)>,
+    r#methods: &[(Value, Value)],
+    r#attributes: &[(Value, Value)],
   ) -> Result<(), Box<CallError>> {
     #[derive(Debug, Serialize)]
     pub struct Args<'a>(
       PhantomData<&'a ()>,
       &'a str,
-      std::vec::Vec<(Value, Value)>,
+      &'a [(Value, Value)],
       &'a str,
-      std::vec::Vec<(Value, Value)>,
-      std::vec::Vec<(Value, Value)>,
+      &'a [(Value, Value)],
+      &'a [(Value, Value)],
     );
     self
       .call(
@@ -972,10 +967,10 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Neovim<W> {
   #[doc = "Since 1"]
   pub async fn call_atomic(
     &self,
-    r#calls: std::vec::Vec<Value>,
+    r#calls: &[Value],
   ) -> Result<std::vec::Vec<Value>, Box<CallError>> {
     #[derive(Debug, Serialize)]
-    pub struct Args<'a>(PhantomData<&'a ()>, std::vec::Vec<Value>);
+    pub struct Args<'a>(PhantomData<&'a ()>, &'a [Value]);
     self
       .call("call_atomic", Args(std::marker::PhantomData, r#calls))
       .await??
@@ -1039,7 +1034,7 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Neovim<W> {
     r#item: i64,
     r#insert: bool,
     r#finish: bool,
-    r#opts: std::vec::Vec<(Value, Value)>,
+    r#opts: &[(Value, Value)],
   ) -> Result<(), Box<CallError>> {
     #[derive(Debug, Serialize)]
     pub struct Args<'a>(
@@ -1047,7 +1042,7 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Neovim<W> {
       i64,
       bool,
       bool,
-      std::vec::Vec<(Value, Value)>,
+      &'a [(Value, Value)],
     );
     self
       .call(
@@ -1062,106 +1057,15 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Neovim<W> {
   pub async fn set_decoration_provider(
     &self,
     r#ns_id: i64,
-    r#opts: std::vec::Vec<(Value, Value)>,
+    r#opts: &[(Value, Value)],
   ) -> Result<(), Box<CallError>> {
     #[derive(Debug, Serialize)]
-    pub struct Args<'a>(
-      PhantomData<&'a ()>,
-      i64,
-      std::vec::Vec<(Value, Value)>,
-    );
+    pub struct Args<'a>(PhantomData<&'a ()>, i64, &'a [(Value, Value)]);
     self
       .call(
         "set_decoration_provider",
         Args(std::marker::PhantomData, r#ns_id, r#opts),
       )
-      .await??
-      .try_unpack()
-      .map_err(|v| Box::new(CallError::WrongValueType(v)))
-  }
-}
-pub struct Tabpage<W>
-where
-  W: AsyncWrite + Send + Unpin + 'static,
-{
-  pub(crate) code_data: i64,
-  pub(crate) neovim: Neovim<W>,
-}
-impl<W: AsyncWrite + Send + Unpin + 'static> Tabpage<W> {
-  pub fn new(code_data: i64, neovim: Neovim<W>) -> Tabpage<W> {
-    Tabpage { code_data, neovim }
-  }
-  #[doc = r" Internal value, that represent type"]
-  pub fn get_value(&self) -> i64 {
-    self.code_data
-  }
-  #[doc = "Since 1"]
-  pub async fn get_var(&self, r#name: &str) -> Result<Value, Box<CallError>> {
-    #[derive(Debug, Serialize)]
-    pub struct Args<'a>(PhantomData<&'a ()>, i64, &'a str);
-    self
-      .neovim
-      .call(
-        "get_var",
-        Args(std::marker::PhantomData, self.get_value(), r#name),
-      )
-      .await??
-      .try_unpack()
-      .map_err(|v| Box::new(CallError::WrongValueType(v)))
-  }
-  #[doc = "Since 1"]
-  pub async fn set_var(
-    &self,
-    r#name: &str,
-    r#value: Value,
-  ) -> Result<(), Box<CallError>> {
-    #[derive(Debug, Serialize)]
-    pub struct Args<'a>(PhantomData<&'a ()>, i64, &'a str, Value);
-    self
-      .neovim
-      .call(
-        "set_var",
-        Args(std::marker::PhantomData, self.get_value(), r#name, r#value),
-      )
-      .await??
-      .try_unpack()
-      .map_err(|v| Box::new(CallError::WrongValueType(v)))
-  }
-  #[doc = "Since 1"]
-  pub async fn del_var(&self, r#name: &str) -> Result<(), Box<CallError>> {
-    #[derive(Debug, Serialize)]
-    pub struct Args<'a>(PhantomData<&'a ()>, i64, &'a str);
-    self
-      .neovim
-      .call(
-        "del_var",
-        Args(std::marker::PhantomData, self.get_value(), r#name),
-      )
-      .await??
-      .try_unpack()
-      .map_err(|v| Box::new(CallError::WrongValueType(v)))
-  }
-  #[doc = "Since 1"]
-  pub async fn get_number(&self) -> Result<i64, Box<CallError>> {
-    #[derive(Debug, Serialize)]
-    pub struct Args<'a>(PhantomData<&'a ()>, i64);
-    self
-      .neovim
-      .call(
-        "get_number",
-        Args(std::marker::PhantomData, self.get_value()),
-      )
-      .await??
-      .try_unpack()
-      .map_err(|v| Box::new(CallError::WrongValueType(v)))
-  }
-  #[doc = "Since 1"]
-  pub async fn is_valid(&self) -> Result<bool, Box<CallError>> {
-    #[derive(Debug, Serialize)]
-    pub struct Args<'a>(PhantomData<&'a ()>, i64);
-    self
-      .neovim
-      .call("is_valid", Args(std::marker::PhantomData, self.get_value()))
       .await??
       .try_unpack()
       .map_err(|v| Box::new(CallError::WrongValueType(v)))
@@ -1413,14 +1317,10 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Window<W> {
   #[doc = "Since 6"]
   pub async fn set_config(
     &self,
-    r#config: std::vec::Vec<(Value, Value)>,
+    r#config: &[(Value, Value)],
   ) -> Result<(), Box<CallError>> {
     #[derive(Debug, Serialize)]
-    pub struct Args<'a>(
-      PhantomData<&'a ()>,
-      i64,
-      std::vec::Vec<(Value, Value)>,
-    );
+    pub struct Args<'a>(PhantomData<&'a ()>, i64, &'a [(Value, Value)]);
     self
       .neovim
       .call(
@@ -1495,15 +1395,10 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Buffer<W> {
   pub async fn attach(
     &self,
     r#send_buffer: bool,
-    r#opts: std::vec::Vec<(Value, Value)>,
+    r#opts: &[(Value, Value)],
   ) -> Result<bool, Box<CallError>> {
     #[derive(Debug, Serialize)]
-    pub struct Args<'a>(
-      PhantomData<&'a ()>,
-      i64,
-      bool,
-      std::vec::Vec<(Value, Value)>,
-    );
+    pub struct Args<'a>(PhantomData<&'a ()>, i64, bool, &'a [(Value, Value)]);
     self
       .neovim
       .call(
@@ -1691,7 +1586,7 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Buffer<W> {
     r#mode: &str,
     r#lhs: &str,
     r#rhs: &str,
-    r#opts: std::vec::Vec<(Value, Value)>,
+    r#opts: &[(Value, Value)],
   ) -> Result<(), Box<CallError>> {
     #[derive(Debug, Serialize)]
     pub struct Args<'a>(
@@ -1700,7 +1595,7 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Buffer<W> {
       &'a str,
       &'a str,
       &'a str,
-      std::vec::Vec<(Value, Value)>,
+      &'a [(Value, Value)],
     );
     self
       .neovim
@@ -1740,14 +1635,10 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Buffer<W> {
   #[doc = "Since 4"]
   pub async fn get_commands(
     &self,
-    r#opts: std::vec::Vec<(Value, Value)>,
+    r#opts: &[(Value, Value)],
   ) -> Result<std::vec::Vec<(Value, Value)>, Box<CallError>> {
     #[derive(Debug, Serialize)]
-    pub struct Args<'a>(
-      PhantomData<&'a ()>,
-      i64,
-      std::vec::Vec<(Value, Value)>,
-    );
+    pub struct Args<'a>(PhantomData<&'a ()>, i64, &'a [(Value, Value)]);
     self
       .neovim
       .call(
@@ -1867,14 +1758,10 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Buffer<W> {
   #[doc = "Since 7"]
   pub async fn delete(
     &self,
-    r#opts: std::vec::Vec<(Value, Value)>,
+    r#opts: &[(Value, Value)],
   ) -> Result<(), Box<CallError>> {
     #[derive(Debug, Serialize)]
-    pub struct Args<'a>(
-      PhantomData<&'a ()>,
-      i64,
-      std::vec::Vec<(Value, Value)>,
-    );
+    pub struct Args<'a>(PhantomData<&'a ()>, i64, &'a [(Value, Value)]);
     self
       .neovim
       .call(
@@ -1918,7 +1805,7 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Buffer<W> {
     &self,
     r#ns_id: i64,
     r#id: i64,
-    r#opts: std::vec::Vec<(Value, Value)>,
+    r#opts: &[(Value, Value)],
   ) -> Result<std::vec::Vec<i64>, Box<CallError>> {
     #[derive(Debug, Serialize)]
     pub struct Args<'a>(
@@ -1926,7 +1813,7 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Buffer<W> {
       i64,
       i64,
       i64,
-      std::vec::Vec<(Value, Value)>,
+      &'a [(Value, Value)],
     );
     self
       .neovim
@@ -1950,7 +1837,7 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Buffer<W> {
     r#ns_id: i64,
     r#start: Value,
     r#end: Value,
-    r#opts: std::vec::Vec<(Value, Value)>,
+    r#opts: &[(Value, Value)],
   ) -> Result<std::vec::Vec<Value>, Box<CallError>> {
     #[derive(Debug, Serialize)]
     pub struct Args<'a>(
@@ -1959,7 +1846,7 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Buffer<W> {
       i64,
       Value,
       Value,
-      std::vec::Vec<(Value, Value)>,
+      &'a [(Value, Value)],
     );
     self
       .neovim
@@ -1984,7 +1871,7 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Buffer<W> {
     r#ns_id: i64,
     r#line: i64,
     r#col: i64,
-    r#opts: std::vec::Vec<(Value, Value)>,
+    r#opts: &[(Value, Value)],
   ) -> Result<i64, Box<CallError>> {
     #[derive(Debug, Serialize)]
     pub struct Args<'a>(
@@ -1993,7 +1880,7 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Buffer<W> {
       i64,
       i64,
       i64,
-      std::vec::Vec<(Value, Value)>,
+      &'a [(Value, Value)],
     );
     self
       .neovim
@@ -2089,8 +1976,8 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Buffer<W> {
     &self,
     r#src_id: i64,
     r#line: i64,
-    r#chunks: std::vec::Vec<Value>,
-    r#opts: std::vec::Vec<(Value, Value)>,
+    r#chunks: &[Value],
+    r#opts: &[(Value, Value)],
   ) -> Result<i64, Box<CallError>> {
     #[derive(Debug, Serialize)]
     pub struct Args<'a>(
@@ -2098,8 +1985,8 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Buffer<W> {
       i64,
       i64,
       i64,
-      std::vec::Vec<Value>,
-      std::vec::Vec<(Value, Value)>,
+      &'a [Value],
+      &'a [(Value, Value)],
     );
     self
       .neovim
@@ -2114,6 +2001,93 @@ impl<W: AsyncWrite + Send + Unpin + 'static> Buffer<W> {
           r#opts,
         ),
       )
+      .await??
+      .try_unpack()
+      .map_err(|v| Box::new(CallError::WrongValueType(v)))
+  }
+}
+pub struct Tabpage<W>
+where
+  W: AsyncWrite + Send + Unpin + 'static,
+{
+  pub(crate) code_data: i64,
+  pub(crate) neovim: Neovim<W>,
+}
+impl<W: AsyncWrite + Send + Unpin + 'static> Tabpage<W> {
+  pub fn new(code_data: i64, neovim: Neovim<W>) -> Tabpage<W> {
+    Tabpage { code_data, neovim }
+  }
+  #[doc = r" Internal value, that represent type"]
+  pub fn get_value(&self) -> i64 {
+    self.code_data
+  }
+  #[doc = "Since 1"]
+  pub async fn get_var(&self, r#name: &str) -> Result<Value, Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(PhantomData<&'a ()>, i64, &'a str);
+    self
+      .neovim
+      .call(
+        "get_var",
+        Args(std::marker::PhantomData, self.get_value(), r#name),
+      )
+      .await??
+      .try_unpack()
+      .map_err(|v| Box::new(CallError::WrongValueType(v)))
+  }
+  #[doc = "Since 1"]
+  pub async fn set_var(
+    &self,
+    r#name: &str,
+    r#value: Value,
+  ) -> Result<(), Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(PhantomData<&'a ()>, i64, &'a str, Value);
+    self
+      .neovim
+      .call(
+        "set_var",
+        Args(std::marker::PhantomData, self.get_value(), r#name, r#value),
+      )
+      .await??
+      .try_unpack()
+      .map_err(|v| Box::new(CallError::WrongValueType(v)))
+  }
+  #[doc = "Since 1"]
+  pub async fn del_var(&self, r#name: &str) -> Result<(), Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(PhantomData<&'a ()>, i64, &'a str);
+    self
+      .neovim
+      .call(
+        "del_var",
+        Args(std::marker::PhantomData, self.get_value(), r#name),
+      )
+      .await??
+      .try_unpack()
+      .map_err(|v| Box::new(CallError::WrongValueType(v)))
+  }
+  #[doc = "Since 1"]
+  pub async fn get_number(&self) -> Result<i64, Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(PhantomData<&'a ()>, i64);
+    self
+      .neovim
+      .call(
+        "get_number",
+        Args(std::marker::PhantomData, self.get_value()),
+      )
+      .await??
+      .try_unpack()
+      .map_err(|v| Box::new(CallError::WrongValueType(v)))
+  }
+  #[doc = "Since 1"]
+  pub async fn is_valid(&self) -> Result<bool, Box<CallError>> {
+    #[derive(Debug, Serialize)]
+    pub struct Args<'a>(PhantomData<&'a ()>, i64);
+    self
+      .neovim
+      .call("is_valid", Args(std::marker::PhantomData, self.get_value()))
       .await??
       .try_unpack()
       .map_err(|v| Box::new(CallError::WrongValueType(v)))

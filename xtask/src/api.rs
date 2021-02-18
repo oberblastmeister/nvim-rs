@@ -105,7 +105,7 @@ impl Type {
 
   pub fn to_rust_type_ref(&self) -> Option<syn::Type> {
     Some(match &*self.0 {
-      "Array" => parse_quote! { std::vec::Vec<Value> },
+      "Array" => parse_quote! { &[Value] },
       "ArrayOf(Integer, 2)" => parse_quote! { (i64, i64) },
       "void" => parse_quote! { () },
       "Integer" => parse_quote! { i64 },
@@ -114,7 +114,7 @@ impl Type {
       "String" => parse_quote! { &str },
       "Object" => parse_quote! { Value },
       "Dictionary" => {
-        parse_quote! { std::vec::Vec<(Value, Value)> }
+        parse_quote! { &[(Value, Value)] }
       }
       "Window" => parse_quote! { Window<W> },
       "Buffer" => parse_quote! { Buffer<W> },
@@ -137,6 +137,10 @@ impl Type {
   pub fn to_rust_type_val(&self) -> Option<syn::Type> {
     Some(match &*self.0 {
       "String" => parse_quote! { String },
+      "Array" => parse_quote! { std::vec::Vec<Value> },
+      "Dictionary" => {
+        parse_quote! { std::vec::Vec<(Value, Value)> }
+      }
       s if UNBOUND_ARRAY_RE.is_match(s) => {
         let inner = UNBOUND_ARRAY_RE
           .captures(s)

@@ -36,7 +36,7 @@ pub fn gen_from_api(api: Api) -> Result<String> {
 
   let ext_type_impls = api
     .types()
-    .into_iter()
+    .iter()
     .map(|(k, v)| {
       let api_funcs: Vec<_> = api
         .ext_type_functions(k)
