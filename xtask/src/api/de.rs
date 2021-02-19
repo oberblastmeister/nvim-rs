@@ -41,12 +41,16 @@ pub struct Function {
   pub deprecated_since: Option<i64>,
   pub method: bool,
   pub name: String,
+  #[serde(skip)]
+  pub short_name: String,
   pub parameters: Vec<Param>,
   pub return_type: Type,
   pub since: i64,
   /// not part of msgpack
   #[serde(skip)]
   pub ext_type: bool,
+  #[serde(skip)]
+  pub ext_type_name: Option<String>,
 }
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]

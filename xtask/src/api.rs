@@ -15,7 +15,12 @@ mod de;
 pub use de::{ErrorType, Function, Type, UiEvent, Version};
 
 lazy_static! {
+    // TODO: need to manually implement
   static ref MANUALLY_IMPLEMENTED: HashSet<&'static str> = [
+      "nvim_list_wins",
+      "nvim_list_bufs",
+      "nvim_list_tabpages",
+      "nvim_tabpage_list_wins",
     // "nvim_ui_attach",
     // "nvim_tabpage_list_wins",
     // "nvim_tabpage_get_win",
@@ -128,16 +133,17 @@ fn add_function(
 
   if found != 0 {
     let ext_type = &mut ext_types[found];
-    function.name = function
+    function.short_name = function
       .name
       .strip_prefix(&ext_type.prefix)
       .unwrap()
       .to_string();
     function.ext_type = true;
+    function.ext_type_name = Some(ext_type.name.clone());
     ext_type.functions.push(function);
     None
   } else {
-    function.name = function
+    function.short_name = function
       .name
       .strip_prefix("nvim_")
       .unwrap_or(&function.name)

@@ -1,6 +1,6 @@
 use crate::{
   api::{Api, ExtType, Function},
-  syn_helpers::{is_ext_type, MaybeQuote},
+  syn_helpers::{is_ext_type, ext_type_ident, MaybeQuote},
   utils,
 };
 
@@ -10,6 +10,7 @@ use eyre::Result;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use xshell::{read_file, write_file};
+use syn::parse_quote as pq;
 
 pub(crate) trait Gen {
   fn gen(&self) -> Result<TokenStream>;
@@ -93,6 +94,8 @@ impl Gen for Function {
   fn gen(&self) -> Result<TokenStream> {
     let name_str = &self.name;
     let name = format_ident!("{}", self.name);
+    let short_name_str = &self.short_name;
+    let short_name = format_ident!("{}", short_name_str);
 
     let skip_amount = if self.ext_type { 1 } else { 0 };
 
@@ -137,6 +140,7 @@ impl Gen for Function {
       .to_rust_type_val()
       .expect("Return type was not converted to rust type");
 
+
     let deprecated_doc = MaybeQuote(self.deprecated_since.map(|n| {
       let s = format!("Deprecated since {}", n);
       quote! { #[doc = #s] }
@@ -153,20 +157,46 @@ impl Gen for Function {
     let uses_internal_neovim =
       MaybeQuote(self.ext_type.then(|| quote! { .neovim }));
 
+    let convert = if is_ext_type(&return_type) {
+      let ident = ext_type_ident(&return_type);
+      quote! {
+        .await?
+        .map(|val| #ident::new(val.try_unpack().unwrap(), self#uses_internal_neovim.clone()))
+        .map_err(|v| Box::new(CallError::WrongValueType(v)))
+      }
+    } else {
+      quote! {
+        .await??
+        .try_unpack()
+        .map_err(|v| Box::new(CallError::WrongValueType(v)))
+      }
+    };
+
+    let mut neovim_arguments: syn::Expr = pq! {
+        (
+            #code_data_param
+            #(#arg_param_names,)*
+        )
+    };
+
+    if neovim_arguments == pq! { () } {
+        neovim_arguments = pq! {
+            {
+                let empty: [Value; 0] =  [];
+                empty
+            }
+        }
+    }
+
     Ok(quote! {
         #deprecated_doc
         #since_doc
-        pub async fn #name(&self, #(#param_names: #param_types),*) -> Result<#return_type, Box<CallError>> {
+        pub async fn #short_name(&self, #(#param_names: #param_types),*) -> Result<#return_type, Box<CallError>> {
             self#uses_internal_neovim.call(
                 #name_str,
-                (
-                    #code_data_param
-                    #(#arg_param_names,)*
-                )
+                #neovim_arguments
             )
-                .await??
-                .try_unpack()
-                .map_err(|v| Box::new(CallError::WrongValueType(v)))
+              #convert
         }
     })
   }

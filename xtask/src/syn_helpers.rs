@@ -1,5 +1,5 @@
 use proc_macro2::TokenStream;
-use quote::ToTokens;
+use quote::{format_ident, ToTokens};
 use syn::parse_quote as pq;
 
 /// Represent optional quoting, just a newtype wrapper around option
@@ -18,4 +18,16 @@ pub fn is_ext_type(tipe: &syn::Type) -> bool {
   tipe == &pq! { Window<W> }
     || tipe == &pq! { Buffer<W> }
     || tipe == &pq! { Tabpage<W> }
+}
+
+pub fn ext_type_ident(tipe: &syn::Type) -> syn::Ident {
+  if tipe == &pq! { Window<W> } {
+    format_ident!("Window")
+  } else if tipe == &pq! { Buffer<W> } {
+    format_ident!("Buffer")
+  } else if tipe == &pq! { Tabpage<W> } {
+    format_ident!("Tabpage")
+  } else {
+    panic!("")
+  }
 }

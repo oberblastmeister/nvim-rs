@@ -118,7 +118,8 @@ where
 
       Ok(match args_value {
         Value::Array(arr) => arr,
-        v => vec![v],
+        _ => panic!("was not array"),
+        // v => vec![v],
       })
     }
 
@@ -247,6 +248,7 @@ where
           error,
         } => {
           let sender = find_sender(&neovim.queue, msgid).await?;
+          debug!("sending value: {:?}", result);
           if error == Value::Nil {
             sender
               .send(Ok(Ok(result)))
