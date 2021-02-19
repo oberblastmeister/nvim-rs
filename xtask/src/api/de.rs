@@ -1,5 +1,7 @@
 //! This module contains rust structs that represent the neovim api. They all
 //! derive `Serialize` and `Deserialize`
+//! This is the raw stuff that comes from the msgpack outputted by neovim.
+//! The parent module will contain the preprocessing
 
 use std::collections::HashMap;
 
