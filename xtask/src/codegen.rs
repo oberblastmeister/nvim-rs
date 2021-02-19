@@ -1,17 +1,15 @@
 use crate::{
-  api::{Api, ExtType, Function, Type},
-  syn_helpers::{is_ext_type, AddLifetime, MaybeQuote},
+  api::{Api, ExtType, Function},
+  syn_helpers::{is_ext_type, MaybeQuote},
   utils,
 };
 
-use std::{collections::HashSet, io::Cursor, path::Path, process::Command};
+use std::path::Path;
 
-use eyre::{eyre, Result};
-use proc_macro2::{Span, TokenStream};
+use eyre::Result;
+use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
-use syn::{fold::Fold, parse_quote as pq};
 use xshell::{read_file, write_file};
-use xshell::cmd;
 
 pub(crate) trait Gen {
   fn gen(&self) -> Result<TokenStream>;
@@ -117,28 +115,22 @@ impl Gen for Function {
       })
       .collect::<Vec<_>>(); // like LuaRef
 
-    let (arg_param_names, arg_param_types): (Vec<_>, Vec<_>) = self
+    let arg_param_names: Vec<_> = self
       .parameters
       .iter()
       .skip(skip_amount)
       .filter_map(|param| {
         let tipe_str = param.tipe();
-        let mut tipe = tipe_str.to_rust_type_ref()?;
-
+        let tipe = tipe_str.to_rust_type_ref()?;
+        let name = format_ident!("r#{}", param.name());
         let name = if is_ext_type(&tipe) {
-          tipe = pq! { i64 };
-          let name = format_ident!("r#{}", param.name());
           quote! { #name.get_value() }
         } else {
-          let name = format_ident!("r#{}", param.name());
           quote! { #name }
         };
-
-        let tipe = Some(AddLifetime::new("'a").fold_type(tipe));
-
-        tipe.map(|tipe| (name, tipe))
+        Some(name)
       })
-      .unzip();
+      .collect();
 
     let return_type = self
       .return_type
@@ -155,16 +147,8 @@ impl Gen for Function {
       quote! { #[doc = #s] }
     };
 
-    let code_data_ty = MaybeQuote(self.ext_type.then(|| quote! { i64, }));
-
     let code_data_param =
       MaybeQuote(self.ext_type.then(|| quote! { self.get_value(), }));
-
-    let args_struct = quote! {
-        #[derive(Debug, Serialize)]
-        // pub struct Args<'a, W: AsyncWrite + Send + Unpin + 'static>(PhantomData<fn(&'a ())>, Value, #(#arg_param_types),*);
-        pub struct Args<'a>(PhantomData<&'a ()>, #code_data_ty #(#arg_param_types),*);
-    };
 
     let uses_internal_neovim =
       MaybeQuote(self.ext_type.then(|| quote! { .neovim }));
@@ -173,14 +157,11 @@ impl Gen for Function {
         #deprecated_doc
         #since_doc
         pub async fn #name(&self, #(#param_names: #param_types),*) -> Result<#return_type, Box<CallError>> {
-            #args_struct
-
             self#uses_internal_neovim.call(
                 #name_str,
-                Args(
-                    std::marker::PhantomData,
+                (
                     #code_data_param
-                    #(#arg_param_names),*
+                    #(#arg_param_names,)*
                 )
             )
                 .await??
